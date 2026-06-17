@@ -28,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
       await AuthService.login(_emailCtrl.text.trim(), _passCtrl.text);
       if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
     } catch (e) {
-      if (mounted) { AppTheme.showSnack(context, '', isError: true); setState(() => _loading = false); }
+      if (mounted) { AppTheme.showSnack(context, '$e', isError: true); setState(() => _loading = false); }
     }
   }
 
