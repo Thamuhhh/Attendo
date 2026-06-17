@@ -14,11 +14,13 @@ class MainShell extends StatelessWidget {
   final bool isDark;
   final VoidCallback onDarkToggle;
   final VoidCallback onLanguageToggle;
-  const MainShell({super.key, required this.isDark, required this.onDarkToggle, required this.onLanguageToggle});
+  final bool notificationsEnabled;
+  final VoidCallback onNotificationToggle;
+  const MainShell({super.key, required this.isDark, required this.onDarkToggle, required this.onLanguageToggle, required this.notificationsEnabled, required this.onNotificationToggle});
 
   @override
   Widget build(BuildContext context) {
-    return _Shell(isDark: isDark, onDarkToggle: onDarkToggle, onLanguageToggle: onLanguageToggle);
+    return _Shell(isDark: isDark, onDarkToggle: onDarkToggle, onLanguageToggle: onLanguageToggle, notificationsEnabled: notificationsEnabled, onNotificationToggle: onNotificationToggle);
   }
 }
 
@@ -26,7 +28,9 @@ class _Shell extends StatefulWidget {
   final bool isDark;
   final VoidCallback onDarkToggle;
   final VoidCallback onLanguageToggle;
-  const _Shell({required this.isDark, required this.onDarkToggle, required this.onLanguageToggle});
+  final bool notificationsEnabled;
+  final VoidCallback onNotificationToggle;
+  const _Shell({required this.isDark, required this.onDarkToggle, required this.onLanguageToggle, required this.notificationsEnabled, required this.onNotificationToggle});
 
   @override
   State<_Shell> createState() => _ShellState();
@@ -71,10 +75,10 @@ class _ShellState extends State<_Shell> {
   void _logout() async {
     await AuthService.logout();
     if (!context.mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => OnboardingPage(onDarkToggle: widget.onDarkToggle, onLanguageToggle: widget.onLanguageToggle)),
-      (route) => false,
-    );
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => OnboardingPage(onDarkToggle: widget.onDarkToggle, onLanguageToggle: widget.onLanguageToggle, notificationsEnabled: widget.notificationsEnabled, onNotificationToggle: widget.onNotificationToggle)),
+        (route) => false,
+      );
   }
 
   @override
@@ -173,6 +177,8 @@ class _ShellState extends State<_Shell> {
                     isDark: widget.isDark,
                     onDarkToggle: widget.onDarkToggle,
                     onLanguageToggle: widget.onLanguageToggle,
+                    notificationsEnabled: widget.notificationsEnabled,
+                    onNotificationToggle: widget.onNotificationToggle,
                   ))); },
                 ),
                 const SizedBox(height: 8),

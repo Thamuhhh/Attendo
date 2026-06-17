@@ -8,7 +8,9 @@ class RegisterPage extends StatefulWidget {
   final bool isDark;
   final VoidCallback onDarkToggle;
   final VoidCallback onLanguageToggle;
-  const RegisterPage({super.key, required this.isDark, required this.onDarkToggle, required this.onLanguageToggle});
+  final bool notificationsEnabled;
+  final VoidCallback onNotificationToggle;
+  const RegisterPage({super.key, required this.isDark, required this.onDarkToggle, required this.onLanguageToggle, required this.notificationsEnabled, required this.onNotificationToggle});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -46,6 +48,8 @@ class _RegisterPageState extends State<RegisterPage> {
           isDark: widget.isDark,
           onDarkToggle: widget.onDarkToggle,
           onLanguageToggle: widget.onLanguageToggle,
+          notificationsEnabled: widget.notificationsEnabled,
+          onNotificationToggle: widget.onNotificationToggle,
         )));
       }
     } catch (e) {
@@ -160,7 +164,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   children: [
                     const Text('Already have an account? ', style: TextStyle(color: AppTheme.textSecondary)),
                     GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LoginPage(isDark: widget.isDark, onDarkToggle: widget.onDarkToggle, onLanguageToggle: widget.onLanguageToggle))),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LoginPage(isDark: widget.isDark, onDarkToggle: widget.onDarkToggle, onLanguageToggle: widget.onLanguageToggle, notificationsEnabled: widget.notificationsEnabled, onNotificationToggle: widget.onNotificationToggle))),
                       child: const Text('Login', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700)),
                     ),
                   ],

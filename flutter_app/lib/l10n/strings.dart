@@ -48,6 +48,7 @@ class AppStrings {
     'dark_mode': 'Dark Mode',
     'language': 'Language',
     'profile': 'Profile',
+    'daily_reminder': 'Daily Reminder',
   };
 
   static const _ta = {
@@ -95,6 +96,7 @@ class AppStrings {
     'dark_mode': 'இருண்ட தோற்றம்',
     'language': 'மொழி',
     'profile': 'சுயவிவரம்',
+    'daily_reminder': 'தினசரி நினைவூட்டல்',
   };
 
   static Map<String, String> _current = _en;

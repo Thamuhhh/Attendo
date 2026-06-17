@@ -6,7 +6,9 @@ class SettingsPage extends StatefulWidget {
   final bool isDark;
   final VoidCallback onDarkToggle;
   final VoidCallback onLanguageToggle;
-  const SettingsPage({super.key, required this.isDark, required this.onDarkToggle, required this.onLanguageToggle});
+  final bool notificationsEnabled;
+  final VoidCallback onNotificationToggle;
+  const SettingsPage({super.key, required this.isDark, required this.onDarkToggle, required this.onLanguageToggle, required this.notificationsEnabled, required this.onNotificationToggle});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -62,6 +64,21 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: Text(AppStrings.isTamil ? 'தமிழ்' : 'English', style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
                     ),
                     onTap: () { widget.onLanguageToggle(); setState(() {}); },
+                  ),
+                  const Divider(height: 1, indent: 60, endIndent: 16),
+                  SwitchListTile(
+                    title: Row(children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.notifications_rounded, color: Colors.green, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(AppStrings.get('daily_reminder'), style: const TextStyle(fontWeight: FontWeight.w600)),
+                    ]),
+                    value: widget.notificationsEnabled,
+                    onChanged: (_) { widget.onNotificationToggle(); setState(() {}); },
+                    activeColor: Colors.green,
                   ),
                 ]),
               ),
