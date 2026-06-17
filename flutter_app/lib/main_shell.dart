@@ -68,7 +68,7 @@ class _ShellState extends State<_Shell> {
   ];
 
   @override
-  void initState() { super.initState(); _pageCtrl = PageController(); ApiService.startKeepAlive(); }
+  void initState() { super.initState(); _pageCtrl = PageController(); }
 
   @override
   void dispose() { ApiService.stopKeepAlive(); _pageCtrl.dispose(); super.dispose(); }

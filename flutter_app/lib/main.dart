@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'theme.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
+import 'services/api_service.dart';
 import 'pages/onboarding_page.dart';
 import 'main_shell.dart';
 import 'l10n/strings.dart';
@@ -10,6 +11,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AuthService.init();
   await NotificationService().initialize();
+  ApiService.startKeepAlive();
+  if (AuthService.isLoggedIn) {
+    ApiService.warmUp();
+  }
   runApp(const MyApp());
 }
 

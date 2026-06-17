@@ -12,9 +12,7 @@ class AttendancePage extends StatefulWidget {
   State<AttendancePage> createState() => _AttendancePageState();
 }
 
-class _AttendancePageState extends State<AttendancePage> with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
+class _AttendancePageState extends State<AttendancePage> {
   DateTime _selectedDate = DateTime.now();
   List<Student> _students = [];
   Map<String, String> _statusMap = {};
@@ -91,7 +89,6 @@ class _AttendancePageState extends State<AttendancePage> with AutomaticKeepAlive
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     final pc = _statusMap.values.where((v) => v == 'present').length;
     final ac = _statusMap.values.where((v) => v == 'absent').length;
 

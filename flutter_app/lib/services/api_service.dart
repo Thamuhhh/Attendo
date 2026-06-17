@@ -21,6 +21,12 @@ class ApiService {
     });
   }
 
+  static Future<void> warmUp() async {
+    try {
+      await http.get(Uri.parse('$productionUrl/auth/me'), headers: AuthService.authHeaders).timeout(const Duration(seconds: 60));
+    } catch (_) {}
+  }
+
   static void stopKeepAlive() {
     _keepAliveTimer?.cancel();
     _keepAliveTimer = null;
