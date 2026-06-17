@@ -173,6 +173,7 @@ class ApiService {
       body: jsonEncode({'records': records}),
     ).timeout(const Duration(seconds: 60));
     if (res.statusCode != 200) throw Exception('Failed to save fees');
+    clearCache();
   }
 
   static Future<List<String>> getHolidays() async {
