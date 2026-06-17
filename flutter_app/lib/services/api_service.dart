@@ -8,14 +8,12 @@ import 'auth_service.dart';
 
 class ApiService {
   static String _customBase = '';
+  static const String productionUrl = 'https://attendo-e4ts.onrender.com/api';
 
   static String get baseUrl {
     if (_customBase.isNotEmpty) return _customBase;
-
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000/api';
-    }
-    return 'http://localhost:3000/api';
+    if (Platform.isAndroid) return 'http://10.0.2.2:3000/api';
+    return productionUrl;
   }
 
   static void setBaseUrl(String url) {
