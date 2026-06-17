@@ -13,6 +13,7 @@ class FeesPage extends StatefulWidget {
 
 class _FeesPageState extends State<FeesPage> {
   late int _year;
+  late int _month;
   FeeSummary? _summary;
   bool _loading = true;
   bool _saving = false;
@@ -22,6 +23,7 @@ class _FeesPageState extends State<FeesPage> {
   void initState() {
     super.initState();
     _year = DateTime.now().year;
+    _month = DateTime.now().month;
     _load();
   }
 
@@ -84,15 +86,19 @@ class _FeesPageState extends State<FeesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final totalPaid = _summary == null || _summary!.summary.isEmpty ? 0 : _summary!.summary.map((s) => s.paidMonths).reduce((a, b) => a + b);
-    final totalDue = _summary == null || _summary!.summary.isEmpty ? 0 : _summary!.summary.map((s) => s.dueMonths).reduce((a, b) => a + b);
+    int thisMonthPaid = 0, thisMonthDue = 0;
+    if (_summary != null) {
+      for (var s in _summary!.summary) {
+        if (_getDisplayStatus(s.id, _month) == 'paid') thisMonthPaid++; else thisMonthDue++;
+      }
+    }
 
     return BackgroundDecoration(
       child: Stack(
         children: [
           Column(
             children: [
-              _buildHeader(totalPaid, totalDue),
+              _buildHeader(thisMonthPaid, thisMonthDue),
               Expanded(child: _buildBody()),
             ],
           ),
@@ -102,7 +108,7 @@ class _FeesPageState extends State<FeesPage> {
     );
   }
 
-  Widget _buildHeader(int totalPaid, int totalDue) {
+  Widget _buildHeader(int thisMonthPaid, int thisMonthDue) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       decoration: BoxDecoration(
@@ -132,6 +138,8 @@ class _FeesPageState extends State<FeesPage> {
               ],
             )),
             _yearPicker(),
+            const SizedBox(width: 8),
+            _monthPicker(),
           ]),
         ),
         if (_summary != null && _summary!.summary.isNotEmpty)
@@ -141,8 +149,8 @@ class _FeesPageState extends State<FeesPage> {
             decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(12)),
             child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
               _statItem(Icons.people_rounded, '${_summary!.summary.length}', 'Students', AppTheme.primary),
-              _statItem(Icons.check_circle_rounded, '$totalPaid', 'Paid', AppTheme.success),
-              _statItem(Icons.pending_rounded, '$totalDue', 'Due', AppTheme.danger),
+              _statItem(Icons.check_circle_rounded, '$thisMonthPaid', 'This Month Paid', AppTheme.success),
+              _statItem(Icons.pending_rounded, '$thisMonthDue', 'This Month Due', AppTheme.danger),
             ]),
           ),
       ]),
@@ -293,6 +301,43 @@ class _FeesPageState extends State<FeesPage> {
           child: const Icon(Icons.chevron_right, size: 20, color: AppTheme.textSecondary),
         ),
       ]),
+    );
+  }
+
+  Widget _monthPicker() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(10)),
+      child: GestureDetector(
+        onTap: () async {
+          final picked = await showDialog<int>(
+            context: context,
+            builder: (ctx) => SimpleDialog(
+              title: const Text('Select Month'),
+              children: List.generate(12, (i) {
+                final m = i + 1;
+                return SimpleDialogOption(
+                  onPressed: () => Navigator.pop(ctx, m),
+                  child: Text(_months[m - 1], style: TextStyle(
+                    fontWeight: m == _month ? FontWeight.w700 : FontWeight.normal,
+                    color: m == _month ? AppTheme.primary : null,
+                  )),
+                );
+              }),
+            ),
+          );
+          if (picked != null && picked != _month) {
+            setState(() => _month = picked);
+          }
+        },
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(_months[_month - 1], style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+          ),
+          const Icon(Icons.arrow_drop_down, size: 20, color: AppTheme.textSecondary),
+        ]),
+      ),
     );
   }
 
