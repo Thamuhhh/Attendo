@@ -257,7 +257,7 @@ class BackgroundDecoration extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        CustomPaint(painter: _BgPainter(), size: Size.infinite),
+        Positioned.fill(child: CustomPaint(painter: _BgPainter())),
         child,
       ],
     );
