@@ -76,13 +76,7 @@ class _ShellState extends State<_Shell> {
       extendBody: true,
       drawer: Drawer(
         child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF0F0C29), Color(0xFF1A1A2E), Color(0xFF16213E)],
-            ),
-          ),
+          color: Colors.white,
           child: SafeArea(
             child: Column(
               children: [
@@ -90,7 +84,7 @@ class _ShellState extends State<_Shell> {
                 Container(
                   padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
                   decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+                    border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
                   ),
                   child: Row(
                     children: [
@@ -102,10 +96,10 @@ class _ShellState extends State<_Shell> {
                           fit: BoxFit.contain,
                           errorBuilder: (_, __, ___) => CircleAvatar(
                             radius: 26,
-                            backgroundColor: Colors.white.withValues(alpha: 0.1),
+                            backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                             child: Text(
                               (AuthService.institutionName ?? 'T')[0].toUpperCase(),
-                              style: const TextStyle(fontSize: 24, color: Colors.white, fontWeight: FontWeight.bold),
+                              style: const TextStyle(fontSize: 24, color: AppTheme.primary, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
@@ -117,13 +111,13 @@ class _ShellState extends State<_Shell> {
                           children: [
                             Text(
                               AuthService.institutionName ?? 'My Institution',
-                              style: const TextStyle(fontSize: 17, color: Colors.white, fontWeight: FontWeight.w700),
+                              style: const TextStyle(fontSize: 17, color: AppTheme.textPrimary, fontWeight: FontWeight.w700),
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 3),
                             Text(
                               AuthService.institutionEmail ?? '',
-                              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.5)),
+                              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
@@ -170,28 +164,27 @@ class _ShellState extends State<_Shell> {
                   margin: const EdgeInsets.fromLTRB(12, 0, 12, 16),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                    border: Border.all(color: Colors.grey.shade200),
                   ),
                   child: ListTile(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     leading: Container(
                       width: 38, height: 38,
                       decoration: BoxDecoration(
-                        color: AppTheme.danger.withValues(alpha: 0.15),
+                        color: AppTheme.danger.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.logout_rounded, color: AppTheme.danger, size: 20),
                     ),
-                    title: const Text('Logout', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+                    title: const Text('Logout', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
                     onTap: () {
                       showDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          backgroundColor: const Color(0xFF1A1A2E),
-                          title: const Text('Logout', style: TextStyle(color: Colors.white)),
-                          content: const Text('Are you sure you want to logout?', style: TextStyle(color: Colors.white70)),
+                          title: const Text('Logout'),
+                          content: const Text('Are you sure you want to logout?'),
                           actions: [
-                            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: Colors.white60))),
+                            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
                             TextButton(
                               onPressed: () { Navigator.pop(ctx); _logout(); },
                               child: const Text('Logout', style: TextStyle(color: AppTheme.danger, fontWeight: FontWeight.w700)),
@@ -336,10 +329,10 @@ class _DrawerItem extends StatelessWidget {
                   Container(
                     width: 38, height: 38,
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.white.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.05),
+                      color: isSelected ? Colors.white.withValues(alpha: 0.2) : AppTheme.primary.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(icon, size: 20, color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.6)),
+                    child: Icon(icon, size: 20, color: isSelected ? Colors.white : AppTheme.primary),
                   ),
                   const SizedBox(width: 14),
                   Text(
@@ -347,7 +340,7 @@ class _DrawerItem extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
+                      color: isSelected ? Colors.white : AppTheme.textPrimary,
                     ),
                   ),
                   const Spacer(),
