@@ -44,6 +44,11 @@ class _OnboardingPageState extends State<OnboardingPage> with TickerProviderStat
     super.initState();
     _pageCtrl = PageController();
     _pulseCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     for (final s in _slides) {
       if (s.imageUrl != null) precacheImage(NetworkImage(s.imageUrl!), context);
     }
