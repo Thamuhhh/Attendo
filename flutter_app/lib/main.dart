@@ -27,7 +27,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool _isDark = false;
-  bool _notificationsEnabled = false;
+  bool _notificationsEnabled = true;
 
   bool get isDark => _isDark;
 
@@ -40,7 +40,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> _loadNotificationPref() async {
     final enabled = await NotificationService().isEnabled;
     if (mounted) setState(() => _notificationsEnabled = enabled);
-    if (enabled) NotificationService().scheduleDailyReminder();
+    NotificationService().scheduleDailyReminder();
   }
 
   void toggleDark() { setState(() => _isDark = !_isDark); }

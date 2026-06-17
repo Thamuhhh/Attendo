@@ -31,7 +31,12 @@ class NotificationService {
 
   Future<bool> get isEnabled async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_prefKey) ?? false;
+    final val = prefs.getBool(_prefKey);
+    if (val == null) {
+      await prefs.setBool(_prefKey, true);
+      return true;
+    }
+    return val;
   }
 
   Future<void> setEnabled(bool enabled) async {
