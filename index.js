@@ -166,7 +166,7 @@ app.get('/api/attendance', authMiddleware, async (req, res) => {
     const records = await Attendance.find(instFilter(req, extra)).sort({ date: -1 }).lean();
 
     const studentIds = [...new Set(records.map(r => r.studentId))];
-    const students = studentIds.length > 0 ? await Student.find({ _id: { $in: studentIds } }).lean() : [];
+    const students = studentIds.length > 0 ? await Student.find(instFilter(req, { _id: { $in: studentIds } })).lean() : [];
     const studentMap = {};
     students.forEach(s => { studentMap[s._id.toString()] = s.name; });
 
