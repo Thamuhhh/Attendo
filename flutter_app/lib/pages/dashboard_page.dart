@@ -71,17 +71,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ],
                 ),
               ),
-              if (!_loading && total > 0)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: SizedBox(
-                    width: 60, height: 60,
-                    child: Stack(alignment: Alignment.center, children: [
-                      CircularProgressWidget(percent: percent, size: 60, strokeWidth: 5),
-                      Text('$percent%', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: percent >= 75 ? AppTheme.success : (percent >= 50 ? AppTheme.warning : AppTheme.danger))),
-                    ]),
-                  ),
-                ),
+
             ],
           ),
           const SizedBox(height: 32),
@@ -105,7 +95,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ]),
               )
             else
-              ..._today!.records.take(5).map((r) => Container(
+              ..._today!.records.map((r) => Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
