@@ -32,11 +32,11 @@ class ApiService {
     _keepAliveTimer = null;
   }
 
-  static dynamic _cached(String key, Future<dynamic> Function() fetcher) async {
+  static Future<T> _cached<T>(String key, Future<T> Function() fetcher) async {
     final now = DateTime.now();
     final entry = _cache[key];
     if (entry != null && now.difference(entry.time) < _cacheDuration) {
-      return entry.data;
+      return entry.data as T;
     }
     final data = await fetcher();
     _cache[key] = _CacheEntry(data, now);
@@ -94,11 +94,11 @@ class ApiService {
   }
 
   static Future<TodayAttendance> getTodayAttendance() async {
-    return _cached('today_attendance', () async {
+    return _cached<TodayAttendance>('today_attendance', () async {
       final res = await http.get(Uri.parse('$baseUrl/attendance/today'), headers: _headers).timeout(const Duration(seconds: 60));
       if (res.statusCode == 200) return TodayAttendance.fromJson(jsonDecode(res.body));
       throw Exception('Failed to load today attendance');
-    }) as Future<TodayAttendance>;
+    });
   }
 
   static Future<List<AttendanceRecord>> getAttendanceByDate(String date) async {
@@ -125,11 +125,11 @@ class ApiService {
   }
 
   static Future<FeeSummary> getFeeSummary(int year) async {
-    return _cached('fee_summary_$year', () async {
+    return _cached<FeeSummary>('fee_summary_$year', () async {
       final res = await http.get(Uri.parse('$baseUrl/fees/summary?year=$year'), headers: _headers).timeout(const Duration(seconds: 60));
       if (res.statusCode == 200) return FeeSummary.fromJson(jsonDecode(res.body));
       throw Exception('Failed to load fee summary');
-    }) as Future<FeeSummary>;
+    });
   }
 
   static Future<List<FeeRecord>> getFeeRecords(String studentId, int year) async {
@@ -141,11 +141,11 @@ class ApiService {
   }
 
   static Future<List<Map<String, dynamic>>> getWeeklyAttendance() async {
-    return _cached('weekly_attendance', () async {
+    return _cached<List<Map<String, dynamic>>>('weekly_attendance', () async {
       final res = await http.get(Uri.parse('$baseUrl/attendance/weekly'), headers: _headers).timeout(const Duration(seconds: 60));
       if (res.statusCode == 200) return (jsonDecode(res.body) as List).cast<Map<String, dynamic>>();
       throw Exception('Failed to load weekly attendance');
-    }) as Future<List<Map<String, dynamic>>>;
+    });
   }
 
   static Future<void> saveFees(List<Map<String, dynamic>> records) async {
