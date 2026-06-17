@@ -126,7 +126,7 @@ class _AttendancePageState extends State<AttendancePage> {
           .map((e) => {'studentId': e.key, 'status': e.value})
           .toList();
       await ApiService.saveAttendance(_dateStr(), records);
-      if (mounted) AppTheme.showSnack(context, 'Attendance saved for $_displayDate()');
+      if (mounted) AppTheme.showSnack(context, 'Saved successfully');
     } catch (e) {
       if (mounted) AppTheme.showSnack(context, 'Save failed', isError: true);
     } finally { if (mounted) setState(() => _saving = false); }
