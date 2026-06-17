@@ -209,11 +209,13 @@ class _ShellState extends State<_Shell> {
             ),
           )),
           Expanded(
-            child: PageView(
-              controller: _pageCtrl,
-              physics: const BouncingScrollPhysics(),
-              onPageChanged: (i) => setState(() => _currentIndex = i),
-              children: _pages,
+            child: RepaintBoundary(
+              child: PageView(
+                controller: _pageCtrl,
+                physics: const BouncingScrollPhysics(),
+                onPageChanged: (i) => setState(() => _currentIndex = i),
+                children: _pages.map((p) => RepaintBoundary(child: p)).toList(),
+              ),
             ),
           ),
         ],

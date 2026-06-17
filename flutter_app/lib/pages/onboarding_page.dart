@@ -10,8 +10,9 @@ class OnboardingPage extends StatefulWidget {
   State<OnboardingPage> createState() => _OnboardingPageState();
 }
 
-class _OnboardingPageState extends State<OnboardingPage> {
-  final _pageCtrl = PageController();
+class _OnboardingPageState extends State<OnboardingPage> with TickerProviderStateMixin {
+  late final PageController _pageCtrl;
+  late final AnimationController _pulseCtrl;
   int _current = 0;
 
   final _slides = [
@@ -36,22 +37,46 @@ class _OnboardingPageState extends State<OnboardingPage> {
   ];
 
   @override
-  void dispose() { _pageCtrl.dispose(); super.dispose(); }
+  void initState() {
+    super.initState();
+    _pageCtrl = PageController();
+    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+    for (final s in _slides) {
+      if (s.imageUrl != null) precacheImage(NetworkImage(s.imageUrl!), context);
+    }
+  }
+
+  @override
+  void dispose() { _pageCtrl.dispose(); _pulseCtrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: PageView(
-              controller: _pageCtrl,
-              onPageChanged: (i) => setState(() => _current = i),
-              children: _slides.map((s) => _SlideWidget(data: s)).toList(),
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              _slides[_current].color.withValues(alpha: 0.04),
+              Colors.white,
+              Colors.white,
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          _buildBottom(),
-        ],
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: PageView(
+                controller: _pageCtrl,
+                physics: const BouncingScrollPhysics(),
+                onPageChanged: (i) => setState(() => _current = i),
+                children: _slides.map((s) => _SlideWidget(data: s, pulseCtrl: _pulseCtrl)).toList(),
+              ),
+            ),
+            _buildBottom(),
+          ],
+        ),
       ),
     );
   }
@@ -62,7 +87,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Dots
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(_slides.length, (i) {
@@ -73,8 +97,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 width: isActive ? 28 : 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: isActive ? AppTheme.primary : Colors.grey.shade300,
+                  gradient: isActive
+                      ? LinearGradient(colors: [_slides[i].color, _slides[i].color.withValues(alpha: 0.5)], begin: Alignment.centerLeft, end: Alignment.centerRight)
+                      : null,
+                  color: isActive ? null : Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(4),
+                  boxShadow: isActive ? [BoxShadow(color: _slides[i].color.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2))] : null,
                 ),
               );
             }),
@@ -82,24 +110,45 @@ class _OnboardingPageState extends State<OnboardingPage> {
           const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
-            height: 54,
-            child: ElevatedButton(
-              onPressed: () {
-                if (_current < _slides.length - 1) {
-                  _pageCtrl.nextPage(duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
-                } else {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage()));
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 4,
-                shadowColor: AppTheme.primary.withValues(alpha: 0.3),
+            height: 56,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                gradient: LinearGradient(
+                  colors: [_slides[_current].color, _slides[_current].color.withValues(alpha: 0.75)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                boxShadow: [BoxShadow(color: _slides[_current].color.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
               ),
-              child: Text(
-                _current < _slides.length - 1 ? 'Next' : 'Get Started',
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: () {
+                    if (_current < _slides.length - 1) {
+                      _pageCtrl.nextPage(duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
+                    } else {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage()));
+                    }
+                  },
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _current < _slides.length - 1 ? 'Next' : 'Get Started',
+                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          _current < _slides.length - 1 ? Icons.arrow_forward_rounded : Icons.rocket_launch_rounded,
+                          color: Colors.white, size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -107,16 +156,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
           if (_current < _slides.length - 1)
             TextButton(
               onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage())),
-              child: const Text('Skip', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
+              child: Text('Skip', style: TextStyle(color: Colors.grey.shade500, fontWeight: FontWeight.w600)),
             ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('Already have an account? ', style: TextStyle(color: AppTheme.textSecondary)),
+              Text('Already have an account? ', style: TextStyle(color: Colors.grey.shade500)),
               GestureDetector(
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage())),
-                child: const Text('Login', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700)),
+                child: Text('Login', style: TextStyle(color: _slides[_current].color, fontWeight: FontWeight.w700)),
               ),
             ],
           ),
@@ -137,7 +186,8 @@ class _SlideData {
 
 class _SlideWidget extends StatelessWidget {
   final _SlideData data;
-  const _SlideWidget({required this.data});
+  final AnimationController pulseCtrl;
+  const _SlideWidget({required this.data, required this.pulseCtrl});
 
   @override
   Widget build(BuildContext context) {
@@ -147,31 +197,43 @@ class _SlideWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Spacer(flex: 2),
-          Container(
-            width: 140,
-            height: 140,
-            decoration: BoxDecoration(
-              color: data.color.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: data.imageUrl != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: Image.network(data.imageUrl!, width: 100, height: 100, fit: BoxFit.contain),
-                  )
-                : Icon(data.icon, size: 72, color: data.color),
+          AnimatedBuilder(
+            animation: pulseCtrl,
+            builder: (ctx, _) {
+              final s = 1.0 + pulseCtrl.value * 0.03;
+              return Transform.scale(
+                scale: s,
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: data.color.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(44),
+                    boxShadow: [
+                      BoxShadow(color: data.color.withValues(alpha: 0.08), blurRadius: 30, offset: const Offset(0, 10)),
+                    ],
+                  ),
+                  child: data.imageUrl != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(32),
+                          child: Image.network(data.imageUrl!, width: 100, height: 100, fit: BoxFit.contain),
+                        )
+                      : Icon(data.icon, size: 72, color: data.color),
+                ),
+              );
+            },
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 48),
           Text(
             data.title,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.textPrimary, height: 1.2),
+            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: AppTheme.textPrimary, height: 1.2),
           ),
           const SizedBox(height: 16),
           Text(
             data.desc,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 15, color: Colors.grey.shade600, height: 1.5),
+            style: TextStyle(fontSize: 15, color: Colors.grey.shade500, height: 1.6),
           ),
           const Spacer(flex: 3),
         ],
