@@ -71,7 +71,17 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: const Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimary),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(
+                    'https://res.cloudinary.com/db33m8gqe/image/upload/q_auto/f_auto/v1781682894/New_Project_elxu7s.png',
+                    width: 80, height: 80,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.school_rounded, size: 50, color: AppTheme.primary),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 const Text('Create Account', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
                 const SizedBox(height: 6),
                 Text('Register your tuition institution', style: TextStyle(fontSize: 15, color: Colors.grey.shade600)),

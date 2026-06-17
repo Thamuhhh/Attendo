@@ -49,15 +49,15 @@ class _LoginPageState extends State<LoginPage> {
                   child: const Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimary),
                 ),
               ),
-              const SizedBox(height: 48),
-              Container(
-                width: 80, height: 80,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.primaryLight]),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.3), blurRadius: 16, offset: Offset(0, 6))],
+              const SizedBox(height: 32),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.network(
+                  'https://res.cloudinary.com/db33m8gqe/image/upload/q_auto/f_auto/v1781682894/New_Project_elxu7s.png',
+                  width: 120, height: 120,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(Icons.school_rounded, size: 60, color: AppTheme.primary),
                 ),
-                child: const Icon(Icons.school_rounded, color: Colors.white, size: 40),
               ),
               const SizedBox(height: 24),
               const Text('Welcome Back', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),

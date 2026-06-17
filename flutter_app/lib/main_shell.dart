@@ -69,13 +69,21 @@ class _ShellState extends State<_Shell> {
           child: SafeArea(
             child: Column(
               children: [
-                const SizedBox(height: 48),
-                CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.white.withOpacity(0.1),
-                  child: Text(
-                    (AuthService.institutionName ?? 'T')[0].toUpperCase(),
-                    style: const TextStyle(fontSize: 36, color: Colors.white, fontWeight: FontWeight.bold),
+                const SizedBox(height: 32),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(
+                    'https://res.cloudinary.com/db33m8gqe/image/upload/q_auto/f_auto/v1781682894/New_Project_elxu7s.png',
+                    width: 100, height: 100,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.white.withOpacity(0.1),
+                      child: Text(
+                        (AuthService.institutionName ?? 'T')[0].toUpperCase(),
+                        style: const TextStyle(fontSize: 36, color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),

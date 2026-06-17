@@ -16,7 +16,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   final _slides = [
     _SlideData(
-      icon: Icons.school_rounded,
+      imageUrl: 'https://res.cloudinary.com/db33m8gqe/image/upload/q_auto/f_auto/v1781682894/New_Project_elxu7s.png',
       title: 'Manage Your\nTuition Center',
       desc: 'Track student attendance, fees, and reports all in one place. Simplify your tuition management.',
       color: AppTheme.primary,
@@ -127,11 +127,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
 }
 
 class _SlideData {
-  final IconData icon;
+  final IconData? icon;
+  final String? imageUrl;
   final String title;
   final String desc;
   final Color color;
-  _SlideData({required this.icon, required this.title, required this.desc, required this.color});
+  _SlideData({this.icon, this.imageUrl, required this.title, required this.desc, required this.color});
 }
 
 class _SlideWidget extends StatelessWidget {
@@ -153,7 +154,12 @@ class _SlideWidget extends StatelessWidget {
               color: data.color.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(40),
             ),
-            child: Icon(data.icon, size: 72, color: data.color),
+            child: data.imageUrl != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: Image.network(data.imageUrl!, width: 100, height: 100, fit: BoxFit.contain),
+                  )
+                : Icon(data.icon, size: 72, color: data.color),
           ),
           const SizedBox(height: 40),
           Text(
