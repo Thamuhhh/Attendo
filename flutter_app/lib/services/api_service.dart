@@ -197,6 +197,15 @@ class ApiService {
     clearCache();
   }
 
+  static Future<Map<String, dynamic>> claimOldData() async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/migrate/claim'),
+      headers: _headers,
+    ).timeout(const Duration(seconds: 60));
+    if (res.statusCode == 200) return jsonDecode(res.body);
+    throw Exception('Claim failed');
+  }
+
   static Future<List<Map<String, dynamic>>> getAttendanceHistory(String studentId, {int? year, int? month}) async {
     String url = '$baseUrl/attendance/history/$studentId';
     if (year != null && month != null) url += '?year=$year&month=$month';
