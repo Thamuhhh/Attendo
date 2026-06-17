@@ -13,30 +13,22 @@ class GradientAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = [
-      [const Color(0xFF667EEA), const Color(0xFF764BA2)],
-      [const Color(0xFFF093FB), const Color(0xFFF5576C)],
-      [const Color(0xFF4FACFE), const Color(0xFF00F2FE)],
-      [const Color(0xFF43E97B), const Color(0xFF38F9D7)],
-      [const Color(0xFFFA709A), const Color(0xFFFEE140)],
-      [const Color(0xFFA18CD1), const Color(0xFFFBC2EB)],
-      [const Color(0xFFFCCB90), const Color(0xFFD57EEB)],
-      [const Color(0xFFE0C3FC), const Color(0xFF8EC5FC)],
+      const Color(0xFF1976D2), const Color(0xFF388E3C), const Color(0xFFD32F2F),
+      const Color(0xFFF57C00), const Color(0xFF7B1FA2), const Color(0xFF0097A7),
+      const Color(0xFFC2185B), const Color(0xFF512DA8), const Color(0xFF00796B),
+      const Color(0xFF5D4037), const Color(0xFF455A64), const Color(0xFF303F9F),
+      const Color(0xFF0288D1), const Color(0xFF689F38), const Color(0xFFE64A19),
     ];
-    final palette = colors[name.hashCode.abs() % colors.length];
+    final bg = colors[name.hashCode.abs() % colors.length];
     final char = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(colors: palette, begin: Alignment.topLeft, end: Alignment.bottomRight),
-        shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: palette[0].withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 3))],
-      ),
+      decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
       child: Center(
         child: Text(char, style: TextStyle(
-          color: Colors.white, fontWeight: FontWeight.w700, fontSize: fontSize,
-          shadows: const [Shadow(color: Color(0x40000000), blurRadius: 2, offset: Offset(0, 1))],
+          color: Colors.white, fontWeight: FontWeight.w500, fontSize: fontSize * 0.55,
         )),
       ),
     );
