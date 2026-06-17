@@ -1,7 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
-const db = require('./db');
+require('./db');
+const Institution = require('./models/Institution');
+const Student = require('./models/Student');
+const Attendance = require('./models/Attendance');
+const Fee = require('./models/Fee');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,11 +15,6 @@ app.use(express.json());
 
 function todayStr() {
   return new Date().toISOString().split('T')[0];
-}
-
-function formatDate(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function getMonthRange(year, month) {
@@ -39,7 +38,7 @@ async function authMiddleware(req, res, next) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   const token = header.split(' ')[1];
-  const inst = await db.institutions.findOne({ token });
+  const inst = await Institution.findOne({ token }).lean();
   if (!inst) {
     return res.status(401).json({ error: 'Invalid token' });
   }
@@ -53,19 +52,18 @@ app.post('/api/auth/register', async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email & password required' });
     }
-    const existing = await db.institutions.findOne({ email });
+    const existing = await Institution.findOne({ email: email.trim().toLowerCase() });
     if (existing) {
       return res.status(400).json({ error: 'Email already registered' });
     }
     const token = generateToken();
-    const inst = await db.institutions.insert({
+    const inst = await new Institution({
       name: name.trim(),
       email: email.trim().toLowerCase(),
       phone: phone || '',
       password: hashPassword(password),
       token,
-      createdAt: new Date().toISOString()
-    });
+    }).save();
     res.json({ token, institution: { id: inst._id, name: inst.name, email: inst.email } });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -78,7 +76,7 @@ app.post('/api/auth/login', async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ error: 'Email & password required' });
     }
-    const inst = await db.institutions.findOne({ email: email.trim().toLowerCase() });
+    const inst = await Institution.findOne({ email: email.trim().toLowerCase() });
     if (!inst || inst.password !== hashPassword(password)) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -94,7 +92,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
 
 app.get('/api/students', authMiddleware, async (req, res) => {
   try {
-    const students = await db.students.find({}).sort({ name: 1 });
+    const students = await Student.find({}).sort({ name: 1 }).lean();
     res.json(students);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -107,11 +105,11 @@ app.post('/api/students', authMiddleware, async (req, res) => {
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'Name is required' });
     }
-    const existing = await db.students.findOne({ name: name.trim() });
+    const existing = await Student.findOne({ name: name.trim() });
     if (existing) {
       return res.status(400).json({ error: 'Student already exists' });
     }
-    const student = await db.students.insert({ name: name.trim(), phone: phone || '', createdAt: new Date().toISOString() });
+    const student = await new Student({ name: name.trim(), phone: phone || '' }).save();
     res.json(student);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -124,9 +122,8 @@ app.put('/api/students/:id', authMiddleware, async (req, res) => {
     const update = {};
     if (name) update.name = name.trim();
     if (phone !== undefined) update.phone = phone;
-    const num = await db.students.update({ _id: req.params.id }, { $set: update });
-    if (num === 0) return res.status(404).json({ error: 'Student not found' });
-    const student = await db.students.findOne({ _id: req.params.id });
+    const student = await Student.findByIdAndUpdate(req.params.id, { $set: update }, { new: true });
+    if (!student) return res.status(404).json({ error: 'Student not found' });
     res.json(student);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -135,9 +132,9 @@ app.put('/api/students/:id', authMiddleware, async (req, res) => {
 
 app.delete('/api/students/:id', authMiddleware, async (req, res) => {
   try {
-    await db.attendance.remove({ studentId: req.params.id }, { multi: true });
-    await db.fees.remove({ studentId: req.params.id }, { multi: true });
-    await db.students.remove({ _id: req.params.id });
+    await Attendance.deleteMany({ studentId: req.params.id });
+    await Fee.deleteMany({ studentId: req.params.id });
+    await Student.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -156,12 +153,12 @@ app.get('/api/attendance', authMiddleware, async (req, res) => {
       query.date = { $gte: start, $lte: end };
     }
 
-    const records = await db.attendance.find(query).sort({ date: -1 });
+    const records = await Attendance.find(query).sort({ date: -1 }).lean();
 
     const studentIds = [...new Set(records.map(r => r.studentId))];
-    const students = await db.students.find({ _id: { $in: studentIds } });
+    const students = studentIds.length > 0 ? await Student.find({ _id: { $in: studentIds } }).lean() : [];
     const studentMap = {};
-    students.forEach(s => { studentMap[s._id] = s.name; });
+    students.forEach(s => { studentMap[s._id.toString()] = s.name; });
 
     const result = records.map(r => ({
       ...r,
@@ -179,32 +176,33 @@ app.post('/api/attendance', authMiddleware, async (req, res) => {
     const { date, records } = req.body;
     const attDate = date || todayStr();
 
-    const existingRecords = await db.attendance.find({ date: attDate });
+    const existingRecords = await Attendance.find({ date: attDate }).lean();
     const existingMap = {};
     existingRecords.forEach(r => { existingMap[r.studentId] = r; });
 
-    const operations = [];
+    const bulkOps = [];
     for (const rec of records) {
       if (existingMap[rec.studentId]) {
-        operations.push(
-          db.attendance.update(
-            { _id: existingMap[rec.studentId]._id },
-            { $set: { status: rec.status } }
-          )
-        );
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: existingMap[rec.studentId]._id },
+            update: { $set: { status: rec.status } },
+          }
+        });
       } else {
-        operations.push(
-          db.attendance.insert({
-            studentId: rec.studentId,
-            date: attDate,
-            status: rec.status
-          })
-        );
+        bulkOps.push({
+          insertOne: {
+            document: { studentId: rec.studentId, date: attDate, status: rec.status }
+          }
+        });
       }
     }
 
-    await Promise.all(operations);
-    const updated = await db.attendance.find({ date: attDate });
+    if (bulkOps.length > 0) {
+      await Attendance.bulkWrite(bulkOps);
+    }
+
+    const updated = await Attendance.find({ date: attDate }).lean();
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -214,8 +212,8 @@ app.post('/api/attendance', authMiddleware, async (req, res) => {
 app.get('/api/attendance/today', authMiddleware, async (req, res) => {
   try {
     const today = todayStr();
-    const students = await db.students.find({}).sort({ name: 1 });
-    const attendance = await db.attendance.find({ date: today });
+    const students = await Student.find({}).sort({ name: 1 }).lean();
+    const attendance = await Attendance.find({ date: today }).lean();
 
     const attMap = {};
     attendance.forEach(a => { attMap[a.studentId] = a.status; });
@@ -224,7 +222,7 @@ app.get('/api/attendance/today', authMiddleware, async (req, res) => {
       _id: s._id,
       name: s.name,
       phone: s.phone,
-      status: attMap[s._id] || 'absent'
+      status: attMap[s._id.toString()] || 'absent'
     }));
 
     res.json({ date: today, records: result });
@@ -240,7 +238,7 @@ app.get('/api/fees', authMiddleware, async (req, res) => {
     if (studentId) query.studentId = studentId;
     if (year) query.year = parseInt(year);
     if (month) query.month = parseInt(month);
-    const records = await db.fees.find(query).sort({ year: -1, month: -1 });
+    const records = await Fee.find(query).sort({ year: -1, month: -1 }).lean();
     res.json(records);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -252,20 +250,26 @@ app.post('/api/fees', authMiddleware, async (req, res) => {
     const { records } = req.body;
     const results = [];
     for (const rec of records) {
-      const existing = await db.fees.findOne({ studentId: rec.studentId, month: rec.month, year: rec.year });
+      const existing = await Fee.findOne({ studentId: rec.studentId, month: rec.month, year: rec.year });
       if (existing) {
-        await db.fees.update({ _id: existing._id }, { $set: { status: rec.status, amount: rec.amount || 0, paidDate: rec.status === 'paid' ? new Date().toISOString().split('T')[0] : null } });
-        results.push({ ...existing, status: rec.status });
+        await Fee.findByIdAndUpdate(existing._id, {
+          $set: {
+            status: rec.status,
+            amount: rec.amount || 0,
+            paidDate: rec.status === 'paid' ? todayStr() : null
+          }
+        });
+        results.push({ ...existing.toObject(), status: rec.status, paidDate: rec.status === 'paid' ? todayStr() : null });
       } else {
-        const inserted = await db.fees.insert({
+        const inserted = await new Fee({
           studentId: rec.studentId,
           month: rec.month,
           year: rec.year,
           status: rec.status || 'unpaid',
           amount: rec.amount || 0,
-          paidDate: rec.status === 'paid' ? new Date().toISOString().split('T')[0] : null
-        });
-        results.push(inserted);
+          paidDate: rec.status === 'paid' ? todayStr() : null
+        }).save();
+        results.push(inserted.toObject());
       }
     }
     res.json(results);
@@ -278,11 +282,11 @@ app.get('/api/fees/summary', authMiddleware, async (req, res) => {
   try {
     const { year } = req.query;
     const y = parseInt(year) || new Date().getFullYear();
-    const students = await db.students.find({}).sort({ name: 1 });
-    const fees = await db.fees.find({ year: y });
+    const students = await Student.find({}).sort({ name: 1 }).lean();
+    const fees = await Fee.find({ year: y }).lean();
 
     const summary = students.map(student => {
-      const studentFees = fees.filter(f => f.studentId === student._id);
+      const studentFees = fees.filter(f => f.studentId === student._id.toString());
       const paidMonths = studentFees.filter(f => f.status === 'paid').length;
       const totalMonths = studentFees.length;
       return {
@@ -309,11 +313,11 @@ app.get('/api/report/monthly', authMiddleware, async (req, res) => {
     const m = parseInt(month) || (new Date().getMonth() + 1);
     const { start, end } = getMonthRange(y, m);
 
-    const students = await db.students.find({}).sort({ name: 1 });
-    const attendance = await db.attendance.find({ date: { $gte: start, $lte: end } });
+    const students = await Student.find({}).sort({ name: 1 }).lean();
+    const attendance = await Attendance.find({ date: { $gte: start, $lte: end } }).lean();
 
     const report = students.map(student => {
-      const studentRecords = attendance.filter(a => a.studentId === student._id);
+      const studentRecords = attendance.filter(a => a.studentId === student._id.toString());
       const present = studentRecords.filter(a => a.status === 'present').length;
       const absent = studentRecords.filter(a => a.status === 'absent').length;
       const total = present + absent;
@@ -342,7 +346,7 @@ app.get('/api/attendance/weekly', authMiddleware, async (req, res) => {
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
       const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-      const records = await db.attendance.find({ date: dateStr });
+      const records = await Attendance.find({ date: dateStr }).lean();
       const present = records.filter(r => r.status === 'present').length;
       const absent = records.filter(r => r.status === 'absent').length;
       days.push({ date: dateStr, day: dayName, present, absent, total: present + absent });

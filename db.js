@@ -1,18 +1,11 @@
-const Datastore = require('nedb-promises');
-const path = require('path');
+const mongoose = require('mongoose');
 
-const db = {
-  students: Datastore.create({ filename: path.join(__dirname, 'data', 'students.db'), autoload: true }),
-  attendance: Datastore.create({ filename: path.join(__dirname, 'data', 'attendance.db'), autoload: true })
-};
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://<user>:<pass>@cluster0.xxxxx.mongodb.net/attendo?retryWrites=true&w=majority';
 
-db.students.ensureIndex({ fieldName: 'name' });
-db.attendance.ensureIndex({ fieldName: ['studentId', 'date'], unique: true });
+mongoose.connect(MONGO_URI).then(() => {
+  console.log('MongoDB connected');
+}).catch(err => {
+  console.error('MongoDB connection error:', err.message);
+});
 
-db.fees = Datastore.create({ filename: path.join(__dirname, 'data', 'fees.db'), autoload: true });
-db.fees.ensureIndex({ fieldName: ['studentId', 'month', 'year'], unique: true });
-
-db.institutions = Datastore.create({ filename: path.join(__dirname, 'data', 'institutions.db'), autoload: true });
-db.institutions.ensureIndex({ fieldName: 'email', unique: true });
-
-module.exports = db;
+module.exports = mongoose;
