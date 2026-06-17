@@ -196,6 +196,9 @@ class _StudentsPageState extends State<StudentsPage> {
                     const SizedBox(height: 6),
                     Text(_searchCtrl.text.isNotEmpty ? 'Try a different search' : 'Tap + to add students',
                         style: TextStyle(fontSize: 13, color: Colors.grey.shade400)),
+                    const SizedBox(height: 12),
+                    if (_searchCtrl.text.isEmpty)
+                      Text('Server resets on restart — data is temporary', style: TextStyle(fontSize: 11, color: Colors.grey.shade400, fontStyle: FontStyle.italic)),
                   ]))
                 : RefreshIndicator(
                     color: AppTheme.primary, onRefresh: _load,

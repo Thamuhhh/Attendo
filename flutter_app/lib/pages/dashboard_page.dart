@@ -311,7 +311,9 @@ class _DashboardPageState extends State<DashboardPage> {
         const SizedBox(height: 16),
         const Text('No attendance marked today', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
         const SizedBox(height: 6),
-        Text('Go to the Attendance tab to mark', style: TextStyle(fontSize: 13, color: Colors.grey.shade400)),
+        Text('Mark attendance in the Attendance tab', style: TextStyle(fontSize: 13, color: Colors.grey.shade400)),
+        const SizedBox(height: 16),
+        Text('Server resets on restart — data is temporary', style: TextStyle(fontSize: 11, color: Colors.grey.shade400, fontStyle: FontStyle.italic)),
       ]),
     );
   }
