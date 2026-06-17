@@ -5,6 +5,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import '../theme.dart';
+import '../services/auth_service.dart';
 import '../models/attendance_record.dart';
 import '../services/api_service.dart';
 import '../widgets/widgets.dart';
@@ -62,71 +63,106 @@ class _ReportPageState extends State<ReportPage> {
 
     return BackgroundDecoration(
       child: Column(children: [
-        GlassCard(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(4),
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 16, offset: const Offset(0, 4))],
+          ),
           child: Column(children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                ScaleOnPress(
-                  onTap: _prev,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.chevron_left_rounded, color: AppTheme.textPrimary),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Column(children: [
+                Row(children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [Color(0xFF1A237E), Color(0xFF534BAE)]),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.assessment_rounded, color: Colors.white, size: 24),
                   ),
-                ),
-                const SizedBox(width: 14),
-                Text('${_months[_month - 1]} $_year', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-                const SizedBox(width: 14),
-                ScaleOnPress(
-                  onTap: _exportCsv,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: AppTheme.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                    child: const Icon(Icons.download_rounded, color: AppTheme.accent, size: 22),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                ScaleOnPress(
-                  onTap: () => _exportPdf(),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: AppTheme.danger.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                    child: _exporting
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.picture_as_pdf_rounded, color: AppTheme.danger, size: 22),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                ScaleOnPress(
-                  onTap: _isCurrent ? null : _next,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: _isCurrent ? Colors.grey.shade100 : Colors.grey.shade100, borderRadius: BorderRadius.circular(10)),
-                    child: Icon(Icons.chevron_right_rounded, color: _isCurrent ? Colors.grey.shade300 : AppTheme.textPrimary),
-                  ),
+                  const SizedBox(width: 16),
+                  Expanded(child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(AuthService.institutionName ?? 'Attendance Report',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+                      const SizedBox(height: 2),
+                      Text('Monthly Attendance Summary',
+                          style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
+                    ],
+                  )),
+                ]),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(12)),
+                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    ScaleOnPress(
+                      onTap: _prev,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade200)),
+                        child: const Icon(Icons.chevron_left_rounded, size: 18, color: AppTheme.textPrimary),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('${_months[_month - 1]} $_year',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                    ),
+                    ScaleOnPress(
+                      onTap: _isCurrent ? null : _next,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: _isCurrent ? Colors.grey.shade100 : Colors.grey.shade200)),
+                        child: Icon(Icons.chevron_right_rounded, size: 18, color: _isCurrent ? Colors.grey.shade300 : AppTheme.textPrimary),
+                      ),
+                    ),
+                    const Spacer(),
+                    ScaleOnPress(
+                      onTap: _exportCsv,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: AppTheme.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.download_rounded, color: AppTheme.accent, size: 20),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ScaleOnPress(
+                      onTap: () => _exportPdf(),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: AppTheme.danger.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                        child: _exporting
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.picture_as_pdf_rounded, color: AppTheme.danger, size: 20),
+                      ),
+                    ),
+                  ]),
                 ),
               ]),
             ),
             if (_report != null && _report!.report.isNotEmpty)
               Container(
-                margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppTheme.primary.withValues(alpha: 0.04), AppTheme.primaryLight.withValues(alpha: 0.02)],
-                    begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  ),
+                  gradient: LinearGradient(colors: [AppTheme.primary.withValues(alpha: 0.06), AppTheme.primaryLight.withValues(alpha: 0.03)],
+                      begin: Alignment.topLeft, end: Alignment.bottomRight),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.primary.withValues(alpha: 0.06)),
+                  border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
                 ),
                 child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
                   _overviewItem(Icons.people_rounded, '${_report!.report.length}', 'Students', AppTheme.primary),
+                  _divider(),
                   _overviewItem(Icons.check_circle_rounded, '$totalPresent', 'Present', AppTheme.success),
+                  _divider(),
                   _overviewItem(Icons.cancel_rounded, '$totalAbsent', 'Absent', AppTheme.danger),
-                  _overviewItem(Icons.percent_rounded, '$avgPct%', 'Avg', AppTheme.accent),
+                  _divider(),
+                  _overviewItem(Icons.trending_up_rounded, '$avgPct%', 'Avg', AppTheme.accent),
                 ]),
               ),
           ]),
@@ -136,84 +172,135 @@ class _ReportPageState extends State<ReportPage> {
               ? ListView.builder(itemCount: 5, itemBuilder: (_, __) => const ShimmerCard())
               : _report == null || _report!.report.isEmpty
                   ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Icon(Icons.bar_chart_rounded, size: 72, color: Colors.grey.shade300),
-                      const SizedBox(height: 16),
-                      Text('No data for ${_months[_month - 1]}', style: TextStyle(fontSize: 16, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
-                      const SizedBox(height: 6),
-                      Text('Mark attendance to see reports', style: TextStyle(fontSize: 13, color: Colors.grey.shade400)),
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
+                        child: Icon(Icons.bar_chart_rounded, size: 48, color: Colors.grey.shade400),
+                      ),
+                      const SizedBox(height: 20),
+                      Text('No Data Available', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.grey.shade500)),
+                      const SizedBox(height: 8),
+                      Text('Mark attendance for ${_months[_month - 1]} to generate report',
+                          style: TextStyle(fontSize: 14, color: Colors.grey.shade400)),
                     ]))
                   : ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      children: _report!.report.asMap().entries.map((entry) {
-                        final i = entry.key;
-                        final r = entry.value;
-                        final color = r.percentage >= 75 ? AppTheme.success : (r.percentage >= 50 ? AppTheme.warning : AppTheme.danger);
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0, end: 1),
-                            duration: Duration(milliseconds: 400 + (i * 80)),
-                            curve: Curves.easeOutCubic,
-                            builder: (ctx, v, _) => Opacity(
-                              opacity: v,
-                              child: Transform.translate(
-                                offset: Offset(0, 20 * (1 - v)),
-                                child: GlassCard(
-                                  margin: EdgeInsets.zero,
-                                  padding: const EdgeInsets.all(16),
-                                  child: Row(children: [
-                                    CircularProgressWidget(percent: r.percentage, size: 64, strokeWidth: 5),
-                                    const SizedBox(width: 16),
-                                    Expanded(child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(r.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppTheme.textPrimary)),
-                                        const SizedBox(height: 8),
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4, bottom: 8),
+                          child: Text('STUDENT DETAILS',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.grey.shade500, letterSpacing: 1)),
+                        ),
+                        ..._report!.report.asMap().entries.map((entry) {
+                          final i = entry.key;
+                          final r = entry.value;
+                          final color = r.percentage >= 75 ? AppTheme.success : (r.percentage >= 50 ? AppTheme.warning : AppTheme.danger);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0, end: 1),
+                              duration: Duration(milliseconds: 400 + (i * 80)),
+                              curve: Curves.easeOutCubic,
+                              builder: (ctx, v, _) => Opacity(
+                                opacity: v,
+                                child: Transform.translate(
+                                  offset: Offset(0, 20 * (1 - v)),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(children: [
                                         Row(children: [
-                                          _chip('${r.present}P', AppTheme.success),
-                                          const SizedBox(width: 6),
-                                          _chip('${r.absent}A', AppTheme.danger),
-                                          const SizedBox(width: 6),
-                                          _chip('${r.total}T', Colors.grey),
-                                        ]),
-                                        const SizedBox(height: 8),
-                                        Stack(
-                                          children: [
-                                            Container(height: 6, decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(3))),
-                                            FractionallySizedBox(
-                                              widthFactor: r.total > 0 ? r.present / r.total : 0,
-                                              child: Container(
-                                                height: 6,
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(colors: [color.withValues(alpha: 0.7), color]),
-                                                  borderRadius: BorderRadius.circular(3),
-                                                ),
-                                              ),
+                                          GradientAvatar(name: r.name, size: 42, fontSize: 16),
+                                          const SizedBox(width: 14),
+                                          Expanded(child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(r.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppTheme.textPrimary)),
+                                              const SizedBox(height: 4),
+                                              Row(children: [
+                                                _statBadge('${r.present}', 'Present', AppTheme.success),
+                                                const SizedBox(width: 8),
+                                                _statBadge('${r.absent}', 'Absent', AppTheme.danger),
+                                                const SizedBox(width: 8),
+                                                _statBadge('${r.total}', 'Total', Colors.grey),
+                                              ]),
+                                            ],
+                                          )),
+                                          Container(
+                                            width: 56, height: 56,
+                                            decoration: BoxDecoration(
+                                              color: color.withValues(alpha: 0.1),
+                                              borderRadius: BorderRadius.circular(14),
+                                              border: Border.all(color: color.withValues(alpha: 0.2)),
                                             ),
-                                          ],
+                                            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                              Text('${r.percentage}%', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: color)),
+                                              Text('Rate', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: color)),
+                                            ]),
+                                          ),
+                                        ]),
+                                        const SizedBox(height: 14),
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(4),
+                                          child: SizedBox(
+                                            height: 8,
+                                            child: Row(children: [
+                                              if (r.present > 0)
+                                                Expanded(flex: r.present, child: Container(color: AppTheme.success)),
+                                              if (r.absent > 0)
+                                                Expanded(flex: r.absent, child: Container(color: AppTheme.danger)),
+                                            ]),
+                                          ),
                                         ),
-                                      ],
-                                    )),
-                                  ]),
+                                        const SizedBox(height: 4),
+                                        Row(children: [
+                                          Text('Present', style: TextStyle(fontSize: 10, color: AppTheme.success, fontWeight: FontWeight.w600)),
+                                          const Spacer(),
+                                          Text('Absent', style: TextStyle(fontSize: 10, color: AppTheme.danger, fontWeight: FontWeight.w600)),
+                                        ]),
+                                      ]),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
+                          );
+                        }),
+                      ],
                     ),
         ),
       ]),
     );
   }
 
+  Widget _divider() {
+    return Container(width: 1, height: 40, color: Colors.grey.shade200);
+  }
+
   Widget _overviewItem(IconData icon, String value, String label, Color color) {
     return Column(children: [
       Icon(icon, color: color, size: 20),
       const SizedBox(height: 4),
-      Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color, height: 1.1)),
-      Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
+      Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: color, height: 1.1)),
+      Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w600)),
     ]);
+  }
+
+  Widget _statBadge(String value, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Text(value, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: color)),
+        const SizedBox(width: 3),
+        Text(label, style: TextStyle(fontSize: 10, color: color)),
+      ]),
+    );
   }
 
   void _exportCsv() async {
@@ -306,11 +393,4 @@ class _ReportPageState extends State<ReportPage> {
     ]);
   }
 
-  Widget _chip(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-      child: Text(text, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
-    );
-  }
 }
