@@ -193,7 +193,8 @@ class _FeesPageState extends State<FeesPage> {
   }
 
   Widget _buildStudentCard(StudentFeeStatus student) {
-    final pct = student.totalMonths > 0 ? (student.paidMonths / student.totalMonths * 100).round() : 0;
+    final elapsed = DateTime.now().month;
+    final pct = elapsed > 0 ? (student.paidMonths / elapsed * 100).round() : 0;
     return GlassCard(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -206,7 +207,7 @@ class _FeesPageState extends State<FeesPage> {
             children: [
               Text(student.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: AppTheme.textPrimary)),
               const SizedBox(height: 3),
-              Text('${student.paidMonths}/${student.totalMonths} months paid',
+              Text('${student.paidMonths}/${DateTime.now().month} months paid',
                   style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
             ],
           )),
