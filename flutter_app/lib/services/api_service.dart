@@ -11,9 +11,11 @@ class ApiService {
   static const String productionUrl = 'https://attendo-e4ts.onrender.com/api';
 
   static String get baseUrl {
-    if (_customBase.isNotEmpty) return _customBase;
-    if (Platform.isAndroid) return 'http://10.0.2.2:3000/api';
-    return productionUrl;
+    return _customBase.isNotEmpty ? _customBase : productionUrl;
+  }
+
+  static void useLocalhost() {
+    _customBase = Platform.isAndroid ? 'http://10.0.2.2:3000/api' : 'http://localhost:3000/api';
   }
 
   static void setBaseUrl(String url) {
