@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/student.dart';
 import '../models/attendance_record.dart';
 import '../models/fee_record.dart';
@@ -45,6 +46,34 @@ class ApiService {
 
   static void clearCache() => _cache.clear();
 
+  static Future<String?> _offlineGet(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('offline_$key');
+  }
+
+  static Future<void> _offlineSet(String key, String data) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('offline_$key', data);
+  }
+
+  static Future<String> _fetchRaw(String url) async {
+    final res = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 60));
+    if (res.statusCode == 200) return res.body;
+    throw Exception('Request failed ($url): ${res.statusCode}');
+  }
+
+  static Future<String> _fetchRawWithFallback(String cacheKey, String url) async {
+    try {
+      final body = await _fetchRaw(url);
+      await _offlineSet(cacheKey, body);
+      return body;
+    } catch (e) {
+      final cached = await _offlineGet(cacheKey);
+      if (cached != null) return cached;
+      rethrow;
+    }
+  }
+
   static String get baseUrl {
     return _customBase.isNotEmpty ? _customBase : productionUrl;
   }
@@ -60,11 +89,8 @@ class ApiService {
   static Map<String, String> get _headers => AuthService.authHeaders;
 
   static Future<List<Student>> getStudents() async {
-    final res = await http.get(Uri.parse('$baseUrl/students'), headers: _headers).timeout(const Duration(seconds: 60));
-    if (res.statusCode == 200) {
-      return (jsonDecode(res.body) as List).map((e) => Student.fromJson(e)).toList();
-    }
-    throw Exception('Failed to load students (${res.statusCode})');
+    final body = await _fetchRawWithFallback('students', '$baseUrl/students');
+    return (jsonDecode(body) as List).map((e) => Student.fromJson(e)).toList();
   }
 
   static Future<Student> addStudent(String name, String phone) async {
@@ -95,18 +121,14 @@ class ApiService {
 
   static Future<TodayAttendance> getTodayAttendance() async {
     return _cached<TodayAttendance>('today_attendance', () async {
-      final res = await http.get(Uri.parse('$baseUrl/attendance/today'), headers: _headers).timeout(const Duration(seconds: 60));
-      if (res.statusCode == 200) return TodayAttendance.fromJson(jsonDecode(res.body));
-      throw Exception('Failed to load today attendance');
+      final body = await _fetchRawWithFallback('today_attendance', '$baseUrl/attendance/today');
+      return TodayAttendance.fromJson(jsonDecode(body));
     });
   }
 
   static Future<List<AttendanceRecord>> getAttendanceByDate(String date) async {
-    final res = await http.get(Uri.parse('$baseUrl/attendance?date=$date'), headers: _headers).timeout(const Duration(seconds: 60));
-    if (res.statusCode == 200) {
-      return (jsonDecode(res.body) as List).map((e) => AttendanceRecord.fromJson(e)).toList();
-    }
-    throw Exception('Failed to load attendance');
+    final body = await _fetchRawWithFallback('attendance_$date', '$baseUrl/attendance?date=$date');
+    return (jsonDecode(body) as List).map((e) => AttendanceRecord.fromJson(e)).toList();
   }
 
   static Future<void> saveAttendance(String date, List<Map<String, dynamic>> records) async {
@@ -116,35 +138,31 @@ class ApiService {
       body: jsonEncode({'date': date, 'records': records}),
     ).timeout(const Duration(seconds: 60));
     if (res.statusCode != 200) throw Exception('Failed to save attendance');
+    clearCache();
   }
 
   static Future<MonthlyReport> getMonthlyReport(int year, int month) async {
-    final res = await http.get(Uri.parse('$baseUrl/report/monthly?year=$year&month=$month'), headers: _headers).timeout(const Duration(seconds: 60));
-    if (res.statusCode == 200) return MonthlyReport.fromJson(jsonDecode(res.body));
-    throw Exception('Failed to load report');
+    final key = 'monthly_${year}_$month';
+    final body = await _fetchRawWithFallback(key, '$baseUrl/report/monthly?year=$year&month=$month');
+    return MonthlyReport.fromJson(jsonDecode(body));
   }
 
   static Future<FeeSummary> getFeeSummary(int year) async {
     return _cached<FeeSummary>('fee_summary_$year', () async {
-      final res = await http.get(Uri.parse('$baseUrl/fees/summary?year=$year'), headers: _headers).timeout(const Duration(seconds: 60));
-      if (res.statusCode == 200) return FeeSummary.fromJson(jsonDecode(res.body));
-      throw Exception('Failed to load fee summary');
+      final body = await _fetchRawWithFallback('fee_summary_$year', '$baseUrl/fees/summary?year=$year');
+      return FeeSummary.fromJson(jsonDecode(body));
     });
   }
 
   static Future<List<FeeRecord>> getFeeRecords(String studentId, int year) async {
-    final res = await http.get(Uri.parse('$baseUrl/fees?studentId=$studentId&year=$year'), headers: _headers).timeout(const Duration(seconds: 60));
-    if (res.statusCode == 200) {
-      return (jsonDecode(res.body) as List).map((e) => FeeRecord.fromJson(e)).toList();
-    }
-    throw Exception('Failed to load fee records');
+    final body = await _fetchRawWithFallback('fees_${studentId}_$year', '$baseUrl/fees?studentId=$studentId&year=$year');
+    return (jsonDecode(body) as List).map((e) => FeeRecord.fromJson(e)).toList();
   }
 
   static Future<List<Map<String, dynamic>>> getWeeklyAttendance() async {
     return _cached<List<Map<String, dynamic>>>('weekly_attendance', () async {
-      final res = await http.get(Uri.parse('$baseUrl/attendance/weekly'), headers: _headers).timeout(const Duration(seconds: 60));
-      if (res.statusCode == 200) return (jsonDecode(res.body) as List).cast<Map<String, dynamic>>();
-      throw Exception('Failed to load weekly attendance');
+      final body = await _fetchRawWithFallback('weekly_attendance', '$baseUrl/attendance/weekly');
+      return (jsonDecode(body) as List).cast<Map<String, dynamic>>();
     });
   }
 
@@ -155,6 +173,34 @@ class ApiService {
       body: jsonEncode({'records': records}),
     ).timeout(const Duration(seconds: 60));
     if (res.statusCode != 200) throw Exception('Failed to save fees');
+  }
+
+  static Future<List<String>> getHolidays() async {
+    final body = await _fetchRawWithFallback('holidays', '$baseUrl/holidays');
+    return (jsonDecode(body) as List).cast<String>();
+  }
+
+  static Future<void> addHoliday(String date) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/holidays'),
+      headers: _headers,
+      body: jsonEncode({'date': date}),
+    ).timeout(const Duration(seconds: 60));
+    if (res.statusCode != 200) throw Exception('Failed to add holiday');
+    clearCache();
+  }
+
+  static Future<void> removeHoliday(String date) async {
+    final res = await http.delete(Uri.parse('$baseUrl/holidays/$date'), headers: _headers).timeout(const Duration(seconds: 60));
+    if (res.statusCode != 200) throw Exception('Failed to remove holiday');
+    clearCache();
+  }
+
+  static Future<List<Map<String, dynamic>>> getAttendanceHistory(String studentId, {int? year, int? month}) async {
+    String url = '$baseUrl/attendance/history/$studentId';
+    if (year != null && month != null) url += '?year=$year&month=$month';
+    final body = await _fetchRawWithFallback('att_history_$studentId', url);
+    return (jsonDecode(body) as List).cast<Map<String, dynamic>>();
   }
 }
 

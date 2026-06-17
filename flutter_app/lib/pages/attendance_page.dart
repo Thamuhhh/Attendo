@@ -14,21 +14,46 @@ class AttendancePage extends StatefulWidget {
 
 class _AttendancePageState extends State<AttendancePage> {
   DateTime _selectedDate = DateTime.now();
-  List<Student> _students = [];
+  List<Student> _allStudents = [];
+  List<Student> _filteredStudents = [];
   Map<String, String> _statusMap = {};
   bool _loading = true;
   bool _saving = false;
+  final _searchCtrl = TextEditingController();
+  Set<String> _holidays = {};
 
   @override
   void initState() {
     super.initState();
+    _searchCtrl.addListener(_filter);
     _load();
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.removeListener(_filter);
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _filter() {
+    final q = _searchCtrl.text.trim().toLowerCase();
+    setState(() {
+      _filteredStudents = q.isEmpty
+          ? _allStudents
+          : _allStudents.where((s) => s.name.toLowerCase().contains(q)).toList();
+    });
   }
 
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final students = await ApiService.getStudents();
+      final results = await Future.wait([
+        ApiService.getStudents(),
+        ApiService.getHolidays(),
+      ]);
+      final students = results[0] as List<Student>;
+      final holidays = results[1] as List<String>;
       List<AttendanceRecord> existing = [];
       try { existing = await ApiService.getAttendanceByDate(_dateStr()); } catch (_) {}
       final sm = <String, String>{};
@@ -36,7 +61,13 @@ class _AttendancePageState extends State<AttendancePage> {
         final f = existing.where((a) => a.studentId == s.id);
         sm[s.id] = f.isNotEmpty ? f.first.status : 'absent';
       }
-      if (mounted) setState(() { _students = students; _statusMap = sm; _loading = false; });
+      if (mounted) setState(() {
+        _allStudents = students;
+        _filteredStudents = students;
+        _statusMap = sm;
+        _holidays = holidays.toSet();
+        _loading = false;
+      });
     } catch (e) {
       if (mounted) { setState(() => _loading = false); AppTheme.showSnack(context, 'Error: $e', isError: true); }
     }
@@ -52,6 +83,7 @@ class _AttendancePageState extends State<AttendancePage> {
   }
 
   bool get _isToday => _dateStr() == '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
+  bool get _isHoliday => _holidays.contains(_dateStr());
 
   Future<void> _pickDate() async {
     final p = await showDatePicker(
@@ -69,15 +101,31 @@ class _AttendancePageState extends State<AttendancePage> {
     if (p != null) { setState(() => _selectedDate = p); _load(); }
   }
 
+  Future<void> _toggleHoliday() async {
+    try {
+      if (_isHoliday) {
+        await ApiService.removeHoliday(_dateStr());
+        setState(() => _holidays.remove(_dateStr()));
+        AppTheme.showSnack(context, 'Holiday removed');
+      } else {
+        await ApiService.addHoliday(_dateStr());
+        setState(() => _holidays.add(_dateStr()));
+        AppTheme.showSnack(context, 'Marked as holiday');
+      }
+    } catch (e) {
+      AppTheme.showSnack(context, 'Failed to update holiday', isError: true);
+    }
+  }
+
   void _toggle(String id) { setState(() => _statusMap[id] = _statusMap[id] == 'present' ? 'absent' : 'present'); }
 
-  void _markAll(String s) { setState(() { for (final st in _students) _statusMap[st.id] = s; }); }
+  void _markAll(String s) { setState(() { for (final st in _allStudents) _statusMap[st.id] = s; }); }
 
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
       final records = _statusMap.entries
-          .where((e) => _students.any((s) => s.id == e.key))
+          .where((e) => _allStudents.any((s) => s.id == e.key))
           .map((e) => {'studentId': e.key, 'status': e.value})
           .toList();
       await ApiService.saveAttendance(_dateStr(), records);
@@ -123,6 +171,11 @@ class _AttendancePageState extends State<AttendancePage> {
                           decoration: BoxDecoration(color: AppTheme.success.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(4)),
                           child: const Text('TODAY', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppTheme.success)),
                         )],
+                        if (_isHoliday) ...[const SizedBox(width: 8), Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(color: AppTheme.warning.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(4)),
+                          child: const Text('HOLIDAY', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppTheme.warning)),
+                        )],
                       ]),
                       const SizedBox(height: 4),
                       Text(_displayDate(), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
@@ -132,41 +185,73 @@ class _AttendancePageState extends State<AttendancePage> {
                 ]),
               ),
             ),
-            if (!_loading && _students.isNotEmpty)
+            if (!_loading && _allStudents.isNotEmpty)
               Container(
                 padding: const EdgeInsets.all(12),
                 margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                 decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(14)),
-                child: Row(children: [
-                  _miniBadge(Icons.check_circle_rounded, '$pc Present', AppTheme.success),
-                  const SizedBox(width: 12),
-                  _miniBadge(Icons.cancel_rounded, '$ac Absent', AppTheme.danger),
-                  const Spacer(),
-                  ScaleOnPress(
-                    onTap: () => _markAll('present'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(color: AppTheme.success.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                      child: const Text('All P', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.success)),
+                child: Column(children: [
+                  Row(children: [
+                    _miniBadge(Icons.check_circle_rounded, '$pc Present', AppTheme.success),
+                    const SizedBox(width: 12),
+                    _miniBadge(Icons.cancel_rounded, '$ac Absent', AppTheme.danger),
+                    const Spacer(),
+                    ScaleOnPress(
+                      onTap: () => _markAll('present'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(color: AppTheme.success.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                        child: const Text('All P', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.success)),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  ScaleOnPress(
-                    onTap: () => _markAll('absent'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(color: AppTheme.danger.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                      child: const Text('All A', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.danger)),
+                    const SizedBox(width: 6),
+                    ScaleOnPress(
+                      onTap: () => _markAll('absent'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(color: AppTheme.danger.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                        child: const Text('All A', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.danger)),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 6),
+                    ScaleOnPress(
+                      onTap: _toggleHoliday,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(color: AppTheme.warning.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                        child: Icon(_isHoliday ? Icons.celebration_rounded : Icons.luggage_rounded, size: 16, color: AppTheme.warning),
+                      ),
+                    ),
+                  ]),
                 ]),
               ),
           ]),
         ),
+        if (!_loading && _allStudents.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+            ),
+            child: TextField(
+              controller: _searchCtrl,
+              decoration: InputDecoration(
+                hintText: 'Search students...',
+                prefixIcon: Icon(Icons.search_rounded, color: Colors.grey.shade400),
+                suffixIcon: _searchCtrl.text.isNotEmpty
+                    ? IconButton(icon: Icon(Icons.clear_rounded, color: Colors.grey.shade400), onPressed: () { _searchCtrl.clear(); })
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
         Expanded(
           child: _loading
               ? ListView.builder(itemCount: 6, itemBuilder: (_, __) => const ShimmerCard())
-              : _students.isEmpty
+              : _allStudents.isEmpty
                   ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                       Icon(Icons.person_add_disabled_rounded, size: 72, color: Colors.grey.shade300),
                       const SizedBox(height: 16),
@@ -178,9 +263,9 @@ class _AttendancePageState extends State<AttendancePage> {
                       color: AppTheme.primary, onRefresh: _load,
                       child: StaggeredList(
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                        itemCount: _students.length,
+                        itemCount: _filteredStudents.length,
                         itemBuilder: (_, i) {
-                          final s = _students[i];
+                          final s = _filteredStudents[i];
                           final ip = _statusMap[s.id] == 'present';
                           return Card(
                             margin: const EdgeInsets.only(bottom: 6),
@@ -241,7 +326,7 @@ class _AttendancePageState extends State<AttendancePage> {
             child: SizedBox(
               width: double.infinity, height: 54,
               child: ElevatedButton.icon(
-                onPressed: _saving || _students.isEmpty ? null : _save,
+                onPressed: _saving || _allStudents.isEmpty ? null : _save,
                 icon: _saving
                     ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
                     : const Icon(Icons.save_rounded),

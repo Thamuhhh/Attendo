@@ -15,7 +15,7 @@ class StudentProfilePage extends StatefulWidget {
 class _StudentProfilePageState extends State<StudentProfilePage> {
   bool _loading = true;
   List<Map<String, dynamic>> _attendanceHistory = [];
-  Map<int, String> _feesMap = {};
+  final Map<int, String> _feesMap = {};
   bool _loadingFees = true;
 
   @override
@@ -25,14 +25,14 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     setState(() => _loading = true);
     try {
       final results = await Future.wait([
-        ApiService.getAttendanceByDate(''),
+        ApiService.getAttendanceHistory(widget.student.id),
         ApiService.getFeeRecords(widget.student.id, DateTime.now().year),
       ]);
       if (mounted) {
-        final att = results[0] as List;
+        final att = results[0] as List<Map<String, dynamic>>;
         final fees = results[1] as List;
         setState(() {
-          _attendanceHistory = att.where((a) => a.studentId == widget.student.id).map((a) => {'date': a.date, 'status': a.status}).toList();
+          _attendanceHistory = att;
           for (final f in fees) { _feesMap[f.month] = f.status; }
           _loading = false;
           _loadingFees = false;
@@ -142,6 +142,9 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                     ),
                     const SizedBox(width: 10),
                     const Text('Attendance History', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                    const Spacer(),
+                    if (_attendanceHistory.isNotEmpty)
+                      Text('${_attendanceHistory.length} days', style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
                   ]),
                   const SizedBox(height: 16),
                   if (_loading)
@@ -152,7 +155,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                       child: Center(child: Text('No attendance records', style: TextStyle(color: Colors.grey.shade400, fontSize: 13))),
                     )
                   else
-                    ...List.generate(_attendanceHistory.length.clamp(0, 20), (i) {
+                    ...List.generate(_attendanceHistory.length.clamp(0, 50), (i) {
                       final a = _attendanceHistory[i];
                       final isPresent = a['status'] == 'present';
                       return Padding(

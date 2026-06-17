@@ -1,5 +1,9 @@
-import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
 import '../theme.dart';
 import '../models/attendance_record.dart';
 import '../services/api_service.dart';
@@ -17,6 +21,7 @@ class _ReportPageState extends State<ReportPage> {
   late int _month;
   MonthlyReport? _report;
   bool _loading = false;
+  bool _exporting = false;
 
   @override
   void initState() {
@@ -81,6 +86,17 @@ class _ReportPageState extends State<ReportPage> {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(color: AppTheme.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                     child: const Icon(Icons.download_rounded, color: AppTheme.accent, size: 22),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                ScaleOnPress(
+                  onTap: () => _exportPdf(),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: AppTheme.danger.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                    child: _exporting
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.picture_as_pdf_rounded, color: AppTheme.danger, size: 22),
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -208,10 +224,86 @@ class _ReportPageState extends State<ReportPage> {
       for (final r in _report!.report) {
         buffer.writeln('"${r.name}","${r.phone}",${r.present},${r.absent},${r.total},${r.percentage}');
       }
-      AppTheme.showSnack(context, 'Report data ready (${_report!.report.length} students)');
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/report_${_year}_${_month.toString().padLeft(2, '0')}.csv');
+      await file.writeAsString(buffer.toString());
+      if (mounted) {
+        AppTheme.showSnack(context, 'CSV saved to ${file.path}');
+        OpenFile.open(file.path);
+      }
     } catch (e) {
-      AppTheme.showSnack(context, 'Export failed', isError: true);
+      if (mounted) AppTheme.showSnack(context, 'Export failed: $e', isError: true);
     }
+  }
+
+  Future<void> _exportPdf() async {
+    if (_report == null || _report!.report.isEmpty) { AppTheme.showSnack(context, 'No data to export', isError: true); return; }
+    setState(() => _exporting = true);
+    try {
+      final pdf = pw.Document();
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(32),
+          build: (ctx) => [
+            pw.Header(
+              level: 0,
+              child: pw.Text('Attendance Report: ${_months[_month - 1]} $_year',
+                  style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold)),
+            ),
+            pw.SizedBox(height: 8),
+            pw.Paragraph(text: 'Generated on ${DateTime.now().toLocal().toString().split('.').first}'),
+            pw.SizedBox(height: 24),
+            pw.TableHelper.fromTextArray(
+              headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+              cellStyle: pw.TextStyle(fontSize: 9),
+              border: pw.TableBorder.all(color: PdfColors.grey300),
+              headers: ['#', 'Name', 'Phone', 'Present', 'Absent', 'Total', 'Percentage'],
+              data: List.generate(_report!.report.length, (i) {
+                final r = _report!.report[i];
+                return [
+                  '${i + 1}',
+                  r.name,
+                  r.phone,
+                  '${r.present}',
+                  '${r.absent}',
+                  '${r.total}',
+                  '${r.percentage}%',
+                ];
+              }),
+            ),
+            pw.SizedBox(height: 32),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+              children: [
+                _pdfStat('Total Students', '${_report!.report.length}'),
+                _pdfStat('Total Present', '${_report!.report.fold(0, (s, r) => s + r.present)}'),
+                _pdfStat('Total Absent', '${_report!.report.fold(0, (s, r) => s + r.absent)}'),
+              ],
+            ),
+          ],
+        ),
+      );
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/report_${_year}_${_month.toString().padLeft(2, '0')}.pdf');
+      await file.writeAsBytes(await pdf.save());
+      if (mounted) {
+        AppTheme.showSnack(context, 'PDF saved to ${file.path}');
+        OpenFile.open(file.path);
+      }
+    } catch (e) {
+      if (mounted) AppTheme.showSnack(context, 'PDF export failed: $e', isError: true);
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  pw.Widget _pdfStat(String label, String value) {
+    return pw.Column(children: [
+      pw.Text(value, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+      pw.SizedBox(height: 4),
+      pw.Text(label, style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
+    ]);
   }
 
   Widget _chip(String text, Color color) {

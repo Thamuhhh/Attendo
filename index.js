@@ -6,6 +6,7 @@ const Institution = require('./models/Institution');
 const Student = require('./models/Student');
 const Attendance = require('./models/Attendance');
 const Fee = require('./models/Fee');
+const Holiday = require('./models/Holiday');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -315,11 +316,13 @@ app.get('/api/report/monthly', authMiddleware, async (req, res) => {
 
     const students = await Student.find({}).sort({ name: 1 }).lean();
     const attendance = await Attendance.find({ date: { $gte: start, $lte: end } }).lean();
+    const holidays = await Holiday.find({ date: { $gte: start, $lte: end } }).lean();
+    const holidaySet = new Set(holidays.map(h => h.date));
 
     const report = students.map(student => {
       const studentRecords = attendance.filter(a => a.studentId === student._id.toString());
       const present = studentRecords.filter(a => a.status === 'present').length;
-      const absent = studentRecords.filter(a => a.status === 'absent').length;
+      const absent = studentRecords.filter(a => a.status === 'absent' && !holidaySet.has(a.date)).length;
       const total = present + absent;
       return {
         _id: student._id,
@@ -333,6 +336,53 @@ app.get('/api/report/monthly', authMiddleware, async (req, res) => {
     });
 
     res.json({ year: y, month: m, report });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/holidays', authMiddleware, async (req, res) => {
+  try {
+    const holidays = await Holiday.find({}).sort({ date: 1 }).lean();
+    res.json(holidays.map(h => h.date));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/holidays', authMiddleware, async (req, res) => {
+  try {
+    const { date, name } = req.body;
+    if (!date) return res.status(400).json({ error: 'Date required' });
+    const existing = await Holiday.findOne({ date });
+    if (existing) return res.json(existing);
+    const holiday = await new Holiday({ date, name: name || 'Holiday' }).save();
+    res.json(holiday);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/holidays/:date', authMiddleware, async (req, res) => {
+  try {
+    await Holiday.findOneAndDelete({ date: req.params.date });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/attendance/history/:studentId', authMiddleware, async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { year, month } = req.query;
+    let query = { studentId };
+    if (year && month) {
+      const { start, end } = getMonthRange(parseInt(year), parseInt(month));
+      query.date = { $gte: start, $lte: end };
+    }
+    const records = await Attendance.find(query).sort({ date: -1 }).lean();
+    res.json(records);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
