@@ -11,7 +11,10 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   TodayAttendance? _today;
   int _totalStudents = 0;
   bool _loading = true;
@@ -52,6 +55,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final present = _today?.records.where((r) => r.status == 'present').length ?? 0;
     final absent = _today?.records.where((r) => r.status == 'absent').length ?? 0;
     final total = _today?.records.length ?? 0;

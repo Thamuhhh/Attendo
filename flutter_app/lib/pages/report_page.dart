@@ -12,7 +12,9 @@ class ReportPage extends StatefulWidget {
   State<ReportPage> createState() => _ReportPageState();
 }
 
-class _ReportPageState extends State<ReportPage> {
+class _ReportPageState extends State<ReportPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   late int _year;
   late int _month;
   MonthlyReport? _report;
@@ -50,6 +52,7 @@ class _ReportPageState extends State<ReportPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final totalPresent = _report == null || _report!.report.isEmpty ? 0 : _report!.report.map((r) => r.present).reduce((a, b) => a + b);
     final totalAbsent = _report == null || _report!.report.isEmpty ? 0 : _report!.report.map((r) => r.absent).reduce((a, b) => a + b);
     final totalAll = totalPresent + totalAbsent;

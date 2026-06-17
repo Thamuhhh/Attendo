@@ -11,7 +11,9 @@ class FeesPage extends StatefulWidget {
   State<FeesPage> createState() => _FeesPageState();
 }
 
-class _FeesPageState extends State<FeesPage> {
+class _FeesPageState extends State<FeesPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   late int _year;
   FeeSummary? _summary;
   bool _loading = true;
@@ -84,6 +86,7 @@ class _FeesPageState extends State<FeesPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final totalPaid = _summary == null || _summary!.summary.isEmpty ? 0 : _summary!.summary.map((s) => s.paidMonths).reduce((a, b) => a + b);
     final totalDue = _summary == null || _summary!.summary.isEmpty ? 0 : _summary!.summary.map((s) => s.dueMonths).reduce((a, b) => a + b);
 

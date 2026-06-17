@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'theme.dart';
 import 'services/auth_service.dart';
+import 'services/api_service.dart';
 import 'pages/onboarding_page.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/students_page.dart';
@@ -67,10 +68,10 @@ class _ShellState extends State<_Shell> {
   ];
 
   @override
-  void initState() { super.initState(); _pageCtrl = PageController(); }
+  void initState() { super.initState(); _pageCtrl = PageController(); ApiService.startKeepAlive(); }
 
   @override
-  void dispose() { _pageCtrl.dispose(); super.dispose(); }
+  void dispose() { ApiService.stopKeepAlive(); _pageCtrl.dispose(); super.dispose(); }
 
   void _logout() async {
     await AuthService.logout();

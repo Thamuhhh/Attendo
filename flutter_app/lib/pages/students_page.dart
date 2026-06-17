@@ -12,7 +12,9 @@ class StudentsPage extends StatefulWidget {
   State<StudentsPage> createState() => _StudentsPageState();
 }
 
-class _StudentsPageState extends State<StudentsPage> {
+class _StudentsPageState extends State<StudentsPage> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   List<Student> _students = [];
   List<Student> _filtered = [];
   bool _loading = true;
@@ -146,6 +148,7 @@ class _StudentsPageState extends State<StudentsPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Column(children: [
       Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
@@ -9,6 +10,34 @@ import 'auth_service.dart';
 class ApiService {
   static String _customBase = '';
   static const String productionUrl = 'https://attendo-e4ts.onrender.com/api';
+  static Timer? _keepAliveTimer;
+  static final Map<String, _CacheEntry> _cache = {};
+  static const Duration _cacheDuration = Duration(seconds: 30);
+
+  static void startKeepAlive() {
+    _keepAliveTimer?.cancel();
+    _keepAliveTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      http.get(Uri.parse('$productionUrl/auth/me'), headers: AuthService.authHeaders).timeout(const Duration(seconds: 10)).catchError((_) {});
+    });
+  }
+
+  static void stopKeepAlive() {
+    _keepAliveTimer?.cancel();
+    _keepAliveTimer = null;
+  }
+
+  static dynamic _cached(String key, Future<dynamic> Function() fetcher) async {
+    final now = DateTime.now();
+    final entry = _cache[key];
+    if (entry != null && now.difference(entry.time) < _cacheDuration) {
+      return entry.data;
+    }
+    final data = await fetcher();
+    _cache[key] = _CacheEntry(data, now);
+    return data;
+  }
+
+  static void clearCache() => _cache.clear();
 
   static String get baseUrl {
     return _customBase.isNotEmpty ? _customBase : productionUrl;
@@ -59,9 +88,11 @@ class ApiService {
   }
 
   static Future<TodayAttendance> getTodayAttendance() async {
-    final res = await http.get(Uri.parse('$baseUrl/attendance/today'), headers: _headers).timeout(const Duration(seconds: 60));
-    if (res.statusCode == 200) return TodayAttendance.fromJson(jsonDecode(res.body));
-    throw Exception('Failed to load today attendance');
+    return _cached('today_attendance', () async {
+      final res = await http.get(Uri.parse('$baseUrl/attendance/today'), headers: _headers).timeout(const Duration(seconds: 60));
+      if (res.statusCode == 200) return TodayAttendance.fromJson(jsonDecode(res.body));
+      throw Exception('Failed to load today attendance');
+    }) as Future<TodayAttendance>;
   }
 
   static Future<List<AttendanceRecord>> getAttendanceByDate(String date) async {
@@ -88,9 +119,11 @@ class ApiService {
   }
 
   static Future<FeeSummary> getFeeSummary(int year) async {
-    final res = await http.get(Uri.parse('$baseUrl/fees/summary?year=$year'), headers: _headers).timeout(const Duration(seconds: 60));
-    if (res.statusCode == 200) return FeeSummary.fromJson(jsonDecode(res.body));
-    throw Exception('Failed to load fee summary');
+    return _cached('fee_summary_$year', () async {
+      final res = await http.get(Uri.parse('$baseUrl/fees/summary?year=$year'), headers: _headers).timeout(const Duration(seconds: 60));
+      if (res.statusCode == 200) return FeeSummary.fromJson(jsonDecode(res.body));
+      throw Exception('Failed to load fee summary');
+    }) as Future<FeeSummary>;
   }
 
   static Future<List<FeeRecord>> getFeeRecords(String studentId, int year) async {
@@ -102,9 +135,11 @@ class ApiService {
   }
 
   static Future<List<Map<String, dynamic>>> getWeeklyAttendance() async {
-    final res = await http.get(Uri.parse('$baseUrl/attendance/weekly'), headers: _headers).timeout(const Duration(seconds: 60));
-    if (res.statusCode == 200) return (jsonDecode(res.body) as List).cast<Map<String, dynamic>>();
-    throw Exception('Failed to load weekly attendance');
+    return _cached('weekly_attendance', () async {
+      final res = await http.get(Uri.parse('$baseUrl/attendance/weekly'), headers: _headers).timeout(const Duration(seconds: 60));
+      if (res.statusCode == 200) return (jsonDecode(res.body) as List).cast<Map<String, dynamic>>();
+      throw Exception('Failed to load weekly attendance');
+    }) as Future<List<Map<String, dynamic>>>;
   }
 
   static Future<void> saveFees(List<Map<String, dynamic>> records) async {
@@ -115,5 +150,11 @@ class ApiService {
     ).timeout(const Duration(seconds: 60));
     if (res.statusCode != 200) throw Exception('Failed to save fees');
   }
+}
+
+class _CacheEntry {
+  final dynamic data;
+  final DateTime time;
+  _CacheEntry(this.data, this.time);
 }
 
