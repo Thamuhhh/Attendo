@@ -54,7 +54,7 @@ class _RegisterPageState extends State<RegisterPage> {
       }
     } catch (e) {
       if (mounted) {
-        AppTheme.showSnack(context, '$e', isError: true);
+        AppTheme.showSnack(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
         setState(() => _loading = false);
       }
     }

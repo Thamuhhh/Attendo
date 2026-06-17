@@ -89,7 +89,7 @@ class _StudentsPageState extends State<StudentsPage> {
                     _load();
                     AppTheme.showSnack(context, isEdit ? 'Updated successfully!' : 'Student added!');
                   } catch (e) {
-                    if (ctx.mounted) { Navigator.pop(ctx); AppTheme.showSnack(context, '$e', isError: true); }
+                    if (ctx.mounted) { Navigator.pop(ctx); AppTheme.showSnack(context, e.toString().replaceFirst('Exception: ', ''), isError: true); }
                   }
                 },
                 style: ElevatedButton.styleFrom(

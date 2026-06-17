@@ -39,7 +39,7 @@ class _LoginPageState extends State<LoginPage> {
         onNotificationToggle: widget.onNotificationToggle,
       )));
     } catch (e) {
-      if (mounted) { AppTheme.showSnack(context, '$e', isError: true); setState(() => _loading = false); }
+      if (mounted) { AppTheme.showSnack(context, e.toString().replaceFirst('Exception: ', ''), isError: true); setState(() => _loading = false); }
     }
   }
 
