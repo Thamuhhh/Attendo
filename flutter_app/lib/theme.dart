@@ -185,22 +185,80 @@ class AppTheme {
   }
 
   static void showSnack(BuildContext context, String message, {bool isError = false}) {
+    _showToast(context, message, isError: isError);
+  }
+
+  static void showToast(BuildContext context, String message, {bool isError = false}) {
+    _showToast(context, message, isError: isError);
+  }
+
+  static void _showToast(BuildContext context, String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            Icon(isError ? Icons.error_rounded : Icons.check_circle_rounded, color: Colors.white, size: 20),
+            _animatedIcon(isError ? Icons.error_rounded : Icons.check_circle_rounded, isError),
             const SizedBox(width: 10),
             Expanded(child: Text(message, style: const TextStyle(fontWeight: FontWeight.w500))),
           ],
         ),
         backgroundColor: isError ? danger : success,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         duration: const Duration(seconds: 3),
+        dismissDirection: DismissDirection.horizontal,
       ),
     );
+  }
+
+  static Widget _animatedIcon(IconData icon, bool isError) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.elasticOut,
+      builder: (ctx, v, _) => Transform.scale(scale: v, child: Icon(icon, color: Colors.white, size: 22)),
+    );
+  }
+
+  static Future<bool> showConfirm(BuildContext context, String title, String message, {String confirmLabel = 'Delete', bool isDestructive = true}) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: (isDestructive ? danger : primary).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(isDestructive ? Icons.delete_outline_rounded : Icons.info_outline_rounded,
+                color: isDestructive ? danger : primary, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+        ]),
+        content: Text(message, style: const TextStyle(fontSize: 14, color: textSecondary, height: 1.4)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade600)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDestructive ? danger : primary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+            child: Text(confirmLabel, style: const TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    ) ?? false;
   }
 }
 

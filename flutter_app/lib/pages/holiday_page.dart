@@ -39,20 +39,23 @@ class _HolidayPageState extends State<HolidayPage> {
       await ApiService.addHoliday(dateStr);
       setState(() => _holidays.add(dateStr));
       widget.onChanged(_holidays);
-      if (mounted) AppTheme.showSnack(context, 'Holiday added');
+      if (mounted) AppTheme.showToast(context, 'Holiday added');
     } catch (e) {
-      if (mounted) AppTheme.showSnack(context, 'Failed to add holiday', isError: true);
+      if (mounted) AppTheme.showToast(context, 'Failed to add holiday', isError: true);
     }
   }
 
   Future<void> _remove(String date) async {
+    final confirmed = await AppTheme.showConfirm(context, 'Remove Holiday',
+      'Remove this holiday from the list?', confirmLabel: 'Remove');
+    if (!confirmed) return;
     try {
       await ApiService.removeHoliday(date);
       setState(() => _holidays.remove(date));
       widget.onChanged(_holidays);
-      if (mounted) AppTheme.showSnack(context, 'Holiday removed');
+      if (mounted) AppTheme.showToast(context, 'Holiday removed');
     } catch (e) {
-      if (mounted) AppTheme.showSnack(context, 'Failed to remove holiday', isError: true);
+      if (mounted) AppTheme.showToast(context, 'Failed to remove holiday', isError: true);
     }
   }
 
@@ -95,7 +98,18 @@ class _HolidayPageState extends State<HolidayPage> {
                 decoration: BoxDecoration(color: AppTheme.danger, borderRadius: BorderRadius.circular(14)),
                 child: const Icon(Icons.delete_rounded, color: Colors.white),
               ),
-              onDismissed: (_) => _remove(date),
+              confirmDismiss: (_) async => AppTheme.showConfirm(context, 'Remove Holiday',
+                'Remove this holiday from the list?', confirmLabel: 'Remove'),
+              onDismissed: (_) async {
+                try {
+                  await ApiService.removeHoliday(date);
+                  setState(() => _holidays.remove(date));
+                  widget.onChanged(_holidays);
+                  if (mounted) AppTheme.showToast(context, 'Holiday removed');
+                } catch (e) {
+                  if (mounted) AppTheme.showToast(context, 'Failed to remove holiday', isError: true);
+                }
+              },
               child: Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

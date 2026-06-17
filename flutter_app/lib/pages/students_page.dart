@@ -105,43 +105,20 @@ class _StudentsPageState extends State<StudentsPage> {
     );
   }
 
-  void _confirmDelete(Student student) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: AppTheme.danger.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
-            child: const Icon(Icons.delete_forever_rounded, color: AppTheme.danger, size: 40),
-          ),
-          const SizedBox(height: 20),
-          const Text('Delete Student', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-          const SizedBox(height: 8),
-          Text('Remove "${student.name}" permanently?\nAll attendance records will also be deleted.',
-              textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey.shade600, height: 1.5)),
-          const SizedBox(height: 24),
-          Row(children: [
-            Expanded(child: TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
-            )),
-            const SizedBox(width: 12),
-            Expanded(child: ElevatedButton(
-              onPressed: () async {
-                try { await ApiService.deleteStudent(student.id); if (ctx.mounted) Navigator.pop(ctx); _load(); AppTheme.showSnack(context, 'Deleted successfully'); }
-                catch (e) { if (ctx.mounted) { Navigator.pop(ctx); AppTheme.showSnack(context, 'Delete failed', isError: true); } }
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.danger, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.w600)),
-            )),
-          ]),
-        ]),
-      ),
+  void _confirmDelete(Student student) async {
+    final confirmed = await AppTheme.showConfirm(
+      context, 'Delete Student',
+      'Remove "${student.name}" permanently?\nAll attendance records will also be deleted.',
+      confirmLabel: 'Delete',
     );
+    if (!confirmed) return;
+    try {
+      await ApiService.deleteStudent(student.id);
+      _load();
+      if (mounted) AppTheme.showToast(context, 'Deleted successfully');
+    } catch (e) {
+      if (mounted) AppTheme.showToast(context, 'Delete failed', isError: true);
+    }
   }
 
   @override
