@@ -211,23 +211,9 @@ class _SlideWidget extends StatelessWidget {
               final s = 1.0 + pulseCtrl.value * 0.03;
               return Transform.scale(
                 scale: s,
-                child: Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    color: data.color.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(44),
-                    boxShadow: [
-                      BoxShadow(color: data.color.withValues(alpha: 0.08), blurRadius: 30, offset: const Offset(0, 10)),
-                    ],
-                  ),
-                  child: data.imageUrl != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(32),
-                          child: Image.network(data.imageUrl!, width: 100, height: 100, fit: BoxFit.contain, errorBuilder: (_, __, ___) => Icon(data.icon ?? Icons.school, size: 72, color: data.color)),
-                        )
-                      : Icon(data.icon, size: 72, color: data.color),
-                ),
+                child: data.imageUrl != null
+                    ? Image.network(data.imageUrl!, width: 140, height: 140, fit: BoxFit.contain, errorBuilder: (_, __, ___) => Icon(data.icon ?? Icons.school, size: 72, color: data.color))
+                    : Icon(data.icon, size: 72, color: data.color),
               );
             },
           ),
