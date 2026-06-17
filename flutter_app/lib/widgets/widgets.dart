@@ -30,7 +30,7 @@ class GradientAvatar extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: palette, begin: Alignment.topLeft, end: Alignment.bottomRight),
-        borderRadius: BorderRadius.circular(size / 3),
+        shape: BoxShape.circle,
         boxShadow: [BoxShadow(color: palette[0].withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 3))],
       ),
       child: Center(
