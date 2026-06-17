@@ -4,6 +4,7 @@ import '../models/student.dart';
 import '../models/attendance_record.dart';
 import '../services/api_service.dart';
 import '../widgets/widgets.dart';
+import 'holiday_page.dart';
 
 class AttendancePage extends StatefulWidget {
   const AttendancePage({super.key});
@@ -101,20 +102,16 @@ class _AttendancePageState extends State<AttendancePage> {
     if (p != null) { setState(() => _selectedDate = p); _load(); }
   }
 
-  Future<void> _toggleHoliday() async {
-    try {
-      if (_isHoliday) {
-        await ApiService.removeHoliday(_dateStr());
-        setState(() => _holidays.remove(_dateStr()));
-        AppTheme.showSnack(context, 'Holiday removed');
-      } else {
-        await ApiService.addHoliday(_dateStr());
-        setState(() => _holidays.add(_dateStr()));
-        AppTheme.showSnack(context, 'Marked as holiday');
-      }
-    } catch (e) {
-      AppTheme.showSnack(context, 'Failed to update holiday', isError: true);
-    }
+  Future<void> _openHolidayManager() async {
+    await Navigator.push(context, MaterialPageRoute(
+      builder: (_) => HolidayPage(
+        currentHolidays: _holidays,
+        onChanged: (updated) {
+          setState(() => _holidays = updated);
+        },
+      ),
+    ));
+    _load();
   }
 
   void _toggle(String id) { setState(() => _statusMap[id] = _statusMap[id] == 'present' ? 'absent' : 'present'); }
@@ -215,11 +212,11 @@ class _AttendancePageState extends State<AttendancePage> {
                     ),
                     const SizedBox(width: 6),
                     ScaleOnPress(
-                      onTap: _toggleHoliday,
+                      onTap: _openHolidayManager,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(color: AppTheme.warning.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                        child: Icon(_isHoliday ? Icons.celebration_rounded : Icons.luggage_rounded, size: 16, color: AppTheme.warning),
+                        child: const Icon(Icons.luggage_rounded, size: 16, color: AppTheme.warning),
                       ),
                     ),
                   ]),
