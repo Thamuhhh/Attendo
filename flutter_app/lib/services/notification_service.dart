@@ -54,7 +54,7 @@ class NotificationService {
     await cancelAll();
 
     final now = DateTime.now();
-    var scheduledDate = DateTime(now.year, now.month, now.day, 8, 0);
+    var scheduledDate = DateTime(now.year, now.month, now.day, 18, 0);
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
