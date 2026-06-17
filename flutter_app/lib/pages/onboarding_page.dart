@@ -88,7 +88,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 if (_current < _slides.length - 1) {
                   _pageCtrl.nextPage(duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
                 } else {
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const RegisterPage()));
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage()));
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -106,7 +106,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
           const SizedBox(height: 12),
           if (_current < _slides.length - 1)
             TextButton(
-              onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const RegisterPage())),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage())),
               child: const Text('Skip', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
             ),
           const SizedBox(height: 8),
@@ -115,7 +115,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             children: [
               const Text('Already have an account? ', style: TextStyle(color: AppTheme.textSecondary)),
               GestureDetector(
-                onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginPage())),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage())),
                 child: const Text('Login', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700)),
               ),
             ],
