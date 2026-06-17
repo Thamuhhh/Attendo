@@ -23,7 +23,7 @@ class ApiService {
   static Map<String, String> get _headers => AuthService.authHeaders;
 
   static Future<List<Student>> getStudents() async {
-    final res = await http.get(Uri.parse('$baseUrl/students'), headers: _headers).timeout(const Duration(seconds: 10));
+    final res = await http.get(Uri.parse('$baseUrl/students'), headers: _headers).timeout(const Duration(seconds: 60));
     if (res.statusCode == 200) {
       return (jsonDecode(res.body) as List).map((e) => Student.fromJson(e)).toList();
     }
@@ -35,7 +35,7 @@ class ApiService {
       Uri.parse('$baseUrl/students'),
       headers: _headers,
       body: jsonEncode({'name': name, 'phone': phone}),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
     if (res.statusCode == 200) return Student.fromJson(jsonDecode(res.body));
     final err = jsonDecode(res.body);
     throw Exception(err['error'] ?? 'Failed to add student');
@@ -46,24 +46,24 @@ class ApiService {
       Uri.parse('$baseUrl/students/$id'),
       headers: _headers,
       body: jsonEncode({'name': name, 'phone': phone}),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
     if (res.statusCode == 200) return Student.fromJson(jsonDecode(res.body));
     throw Exception('Failed to update student');
   }
 
   static Future<void> deleteStudent(String id) async {
-    final res = await http.delete(Uri.parse('$baseUrl/students/$id'), headers: _headers).timeout(const Duration(seconds: 10));
+    final res = await http.delete(Uri.parse('$baseUrl/students/$id'), headers: _headers).timeout(const Duration(seconds: 60));
     if (res.statusCode != 200) throw Exception('Failed to delete student');
   }
 
   static Future<TodayAttendance> getTodayAttendance() async {
-    final res = await http.get(Uri.parse('$baseUrl/attendance/today'), headers: _headers).timeout(const Duration(seconds: 10));
+    final res = await http.get(Uri.parse('$baseUrl/attendance/today'), headers: _headers).timeout(const Duration(seconds: 60));
     if (res.statusCode == 200) return TodayAttendance.fromJson(jsonDecode(res.body));
     throw Exception('Failed to load today attendance');
   }
 
   static Future<List<AttendanceRecord>> getAttendanceByDate(String date) async {
-    final res = await http.get(Uri.parse('$baseUrl/attendance?date=$date'), headers: _headers).timeout(const Duration(seconds: 10));
+    final res = await http.get(Uri.parse('$baseUrl/attendance?date=$date'), headers: _headers).timeout(const Duration(seconds: 60));
     if (res.statusCode == 200) {
       return (jsonDecode(res.body) as List).map((e) => AttendanceRecord.fromJson(e)).toList();
     }
@@ -75,24 +75,24 @@ class ApiService {
       Uri.parse('$baseUrl/attendance'),
       headers: _headers,
       body: jsonEncode({'date': date, 'records': records}),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
     if (res.statusCode != 200) throw Exception('Failed to save attendance');
   }
 
   static Future<MonthlyReport> getMonthlyReport(int year, int month) async {
-    final res = await http.get(Uri.parse('$baseUrl/report/monthly?year=$year&month=$month'), headers: _headers).timeout(const Duration(seconds: 10));
+    final res = await http.get(Uri.parse('$baseUrl/report/monthly?year=$year&month=$month'), headers: _headers).timeout(const Duration(seconds: 60));
     if (res.statusCode == 200) return MonthlyReport.fromJson(jsonDecode(res.body));
     throw Exception('Failed to load report');
   }
 
   static Future<FeeSummary> getFeeSummary(int year) async {
-    final res = await http.get(Uri.parse('$baseUrl/fees/summary?year=$year'), headers: _headers).timeout(const Duration(seconds: 10));
+    final res = await http.get(Uri.parse('$baseUrl/fees/summary?year=$year'), headers: _headers).timeout(const Duration(seconds: 60));
     if (res.statusCode == 200) return FeeSummary.fromJson(jsonDecode(res.body));
     throw Exception('Failed to load fee summary');
   }
 
   static Future<List<FeeRecord>> getFeeRecords(String studentId, int year) async {
-    final res = await http.get(Uri.parse('$baseUrl/fees?studentId=$studentId&year=$year'), headers: _headers).timeout(const Duration(seconds: 10));
+    final res = await http.get(Uri.parse('$baseUrl/fees?studentId=$studentId&year=$year'), headers: _headers).timeout(const Duration(seconds: 60));
     if (res.statusCode == 200) {
       return (jsonDecode(res.body) as List).map((e) => FeeRecord.fromJson(e)).toList();
     }
@@ -104,7 +104,8 @@ class ApiService {
       Uri.parse('$baseUrl/fees'),
       headers: _headers,
       body: jsonEncode({'records': records}),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
     if (res.statusCode != 200) throw Exception('Failed to save fees');
   }
 }
+

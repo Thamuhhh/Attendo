@@ -29,7 +29,7 @@ class AuthService {
       Uri.parse('${ApiService.baseUrl}/auth/register'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'name': name, 'email': email, 'phone': phone, 'password': password}),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
 
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
@@ -45,7 +45,7 @@ class AuthService {
       Uri.parse('${ApiService.baseUrl}/auth/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'password': password}),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
 
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
