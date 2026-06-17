@@ -33,6 +33,13 @@ function generateToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
+function instFilter(req, extra = {}) {
+  const id = req.institution._id.toString();
+  const base = { institutionId: id };
+  if (Object.keys(extra).length === 0) return base;
+  return { $and: [base, extra] };
+}
+
 async function authMiddleware(req, res, next) {
   const header = req.headers.authorization;
   if (!header || !header.startsWith('Bearer ')) {
@@ -93,7 +100,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
 
 app.get('/api/students', authMiddleware, async (req, res) => {
   try {
-    const students = await Student.find({}).sort({ name: 1 }).lean();
+    const students = await Student.find(instFilter(req)).sort({ name: 1 }).lean();
     res.json(students);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -106,11 +113,11 @@ app.post('/api/students', authMiddleware, async (req, res) => {
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'Name is required' });
     }
-    const existing = await Student.findOne({ name: name.trim() });
+    const existing = await Student.findOne(instFilter(req, { name: name.trim() }));
     if (existing) {
       return res.status(400).json({ error: 'Student already exists' });
     }
-    const student = await new Student({ name: name.trim(), phone: phone || '' }).save();
+    const student = await new Student({ name: name.trim(), phone: phone || '', institutionId: req.institution._id.toString() }).save();
     res.json(student);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -123,7 +130,7 @@ app.put('/api/students/:id', authMiddleware, async (req, res) => {
     const update = {};
     if (name) update.name = name.trim();
     if (phone !== undefined) update.phone = phone;
-    const student = await Student.findByIdAndUpdate(req.params.id, { $set: update }, { new: true });
+    const student = await Student.findOneAndUpdate(instFilter(req, { _id: req.params.id }), { $set: update }, { new: true });
     if (!student) return res.status(404).json({ error: 'Student not found' });
     res.json(student);
   } catch (err) {
@@ -133,9 +140,11 @@ app.put('/api/students/:id', authMiddleware, async (req, res) => {
 
 app.delete('/api/students/:id', authMiddleware, async (req, res) => {
   try {
-    await Attendance.deleteMany({ studentId: req.params.id });
-    await Fee.deleteMany({ studentId: req.params.id });
-    await Student.findByIdAndDelete(req.params.id);
+    const instId = req.institution._id.toString();
+    const delFilter = { studentId: req.params.id, institutionId: instId };
+    await Attendance.deleteMany(delFilter);
+    await Fee.deleteMany(delFilter);
+    await Student.findOneAndDelete(instFilter(req, { _id: req.params.id }));
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -146,15 +155,15 @@ app.get('/api/attendance', authMiddleware, async (req, res) => {
   try {
     const { date, studentId, year, month } = req.query;
 
-    let query = {};
-    if (date) query.date = date;
-    if (studentId) query.studentId = studentId;
+    let extra = {};
+    if (date) extra.date = date;
+    if (studentId) extra.studentId = studentId;
     if (year && month) {
       const { start, end } = getMonthRange(parseInt(year), parseInt(month));
-      query.date = { $gte: start, $lte: end };
+      extra.date = { $gte: start, $lte: end };
     }
 
-    const records = await Attendance.find(query).sort({ date: -1 }).lean();
+    const records = await Attendance.find(instFilter(req, extra)).sort({ date: -1 }).lean();
 
     const studentIds = [...new Set(records.map(r => r.studentId))];
     const students = studentIds.length > 0 ? await Student.find({ _id: { $in: studentIds } }).lean() : [];
@@ -176,8 +185,15 @@ app.post('/api/attendance', authMiddleware, async (req, res) => {
   try {
     const { date, records } = req.body;
     const attDate = date || todayStr();
+    const instId = req.institution._id.toString();
 
-    const existingRecords = await Attendance.find({ date: attDate }).lean();
+    const studentIds = records.map(r => r.studentId);
+    const owned = await Student.countDocuments(instFilter(req, { _id: { $in: studentIds } }));
+    if (owned !== [...new Set(studentIds)].length) {
+      return res.status(403).json({ error: 'Some students do not belong to your institution' });
+    }
+
+    const existingRecords = await Attendance.find(instFilter(req, { date: attDate })).lean();
     const existingMap = {};
     existingRecords.forEach(r => { existingMap[r.studentId] = r; });
 
@@ -193,7 +209,7 @@ app.post('/api/attendance', authMiddleware, async (req, res) => {
       } else {
         bulkOps.push({
           insertOne: {
-            document: { studentId: rec.studentId, date: attDate, status: rec.status }
+            document: { studentId: rec.studentId, institutionId: instId, date: attDate, status: rec.status }
           }
         });
       }
@@ -203,7 +219,7 @@ app.post('/api/attendance', authMiddleware, async (req, res) => {
       await Attendance.bulkWrite(bulkOps);
     }
 
-    const updated = await Attendance.find({ date: attDate }).lean();
+    const updated = await Attendance.find(instFilter(req, { date: attDate })).lean();
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -213,8 +229,8 @@ app.post('/api/attendance', authMiddleware, async (req, res) => {
 app.get('/api/attendance/today', authMiddleware, async (req, res) => {
   try {
     const today = todayStr();
-    const students = await Student.find({}).sort({ name: 1 }).lean();
-    const attendance = await Attendance.find({ date: today }).lean();
+    const students = await Student.find(instFilter(req)).sort({ name: 1 }).lean();
+    const attendance = await Attendance.find(instFilter(req, { date: today })).lean();
 
     const attMap = {};
     attendance.forEach(a => { attMap[a.studentId] = a.status; });
@@ -235,11 +251,11 @@ app.get('/api/attendance/today', authMiddleware, async (req, res) => {
 app.get('/api/fees', authMiddleware, async (req, res) => {
   try {
     const { studentId, year, month } = req.query;
-    let query = {};
-    if (studentId) query.studentId = studentId;
-    if (year) query.year = parseInt(year);
-    if (month) query.month = parseInt(month);
-    const records = await Fee.find(query).sort({ year: -1, month: -1 }).lean();
+    let extra = {};
+    if (studentId) extra.studentId = studentId;
+    if (year) extra.year = parseInt(year);
+    if (month) extra.month = parseInt(month);
+    const records = await Fee.find(instFilter(req, extra)).sort({ year: -1, month: -1 }).lean();
     res.json(records);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -249,9 +265,17 @@ app.get('/api/fees', authMiddleware, async (req, res) => {
 app.post('/api/fees', authMiddleware, async (req, res) => {
   try {
     const { records } = req.body;
+    const instId = req.institution._id.toString();
+
+    const studentIds = records.map(r => r.studentId);
+    const owned = await Student.countDocuments(instFilter(req, { _id: { $in: studentIds } }));
+    if (owned !== [...new Set(studentIds)].length) {
+      return res.status(403).json({ error: 'Some students do not belong to your institution' });
+    }
+
     const results = [];
     for (const rec of records) {
-      const existing = await Fee.findOne({ studentId: rec.studentId, month: rec.month, year: rec.year });
+      const existing = await Fee.findOne(instFilter(req, { studentId: rec.studentId, month: rec.month, year: rec.year }));
       if (existing) {
         await Fee.findByIdAndUpdate(existing._id, {
           $set: {
@@ -264,6 +288,7 @@ app.post('/api/fees', authMiddleware, async (req, res) => {
       } else {
         const inserted = await new Fee({
           studentId: rec.studentId,
+          institutionId: instId,
           month: rec.month,
           year: rec.year,
           status: rec.status || 'unpaid',
@@ -283,8 +308,8 @@ app.get('/api/fees/summary', authMiddleware, async (req, res) => {
   try {
     const { year } = req.query;
     const y = parseInt(year) || new Date().getFullYear();
-    const students = await Student.find({}).sort({ name: 1 }).lean();
-    const fees = await Fee.find({ year: y }).lean();
+    const students = await Student.find(instFilter(req)).sort({ name: 1 }).lean();
+    const fees = await Fee.find(instFilter(req, { year: y })).lean();
 
     const summary = students.map(student => {
       const studentFees = fees.filter(f => f.studentId === student._id.toString());
@@ -314,9 +339,9 @@ app.get('/api/report/monthly', authMiddleware, async (req, res) => {
     const m = parseInt(month) || (new Date().getMonth() + 1);
     const { start, end } = getMonthRange(y, m);
 
-    const students = await Student.find({}).sort({ name: 1 }).lean();
-    const attendance = await Attendance.find({ date: { $gte: start, $lte: end } }).lean();
-    const holidays = await Holiday.find({ date: { $gte: start, $lte: end } }).lean();
+    const students = await Student.find(instFilter(req)).sort({ name: 1 }).lean();
+    const attendance = await Attendance.find(instFilter(req, { date: { $gte: start, $lte: end } })).lean();
+    const holidays = await Holiday.find(instFilter(req, { date: { $gte: start, $lte: end } })).lean();
     const holidaySet = new Set(holidays.map(h => h.date));
 
     const report = students.map(student => {
@@ -343,7 +368,7 @@ app.get('/api/report/monthly', authMiddleware, async (req, res) => {
 
 app.get('/api/holidays', authMiddleware, async (req, res) => {
   try {
-    const holidays = await Holiday.find({}).sort({ date: 1 }).lean();
+    const holidays = await Holiday.find(instFilter(req)).sort({ date: 1 }).lean();
     res.json(holidays.map(h => h.date));
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -354,9 +379,9 @@ app.post('/api/holidays', authMiddleware, async (req, res) => {
   try {
     const { date, name } = req.body;
     if (!date) return res.status(400).json({ error: 'Date required' });
-    const existing = await Holiday.findOne({ date });
+    const existing = await Holiday.findOne(instFilter(req, { date }));
     if (existing) return res.json(existing);
-    const holiday = await new Holiday({ date, name: name || 'Holiday' }).save();
+    const holiday = await new Holiday({ date, name: name || 'Holiday', institutionId: req.institution._id.toString() }).save();
     res.json(holiday);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -365,7 +390,7 @@ app.post('/api/holidays', authMiddleware, async (req, res) => {
 
 app.delete('/api/holidays/:date', authMiddleware, async (req, res) => {
   try {
-    await Holiday.findOneAndDelete({ date: req.params.date });
+    await Holiday.findOneAndDelete(instFilter(req, { date: req.params.date }));
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -376,12 +401,12 @@ app.get('/api/attendance/history/:studentId', authMiddleware, async (req, res) =
   try {
     const { studentId } = req.params;
     const { year, month } = req.query;
-    let query = { studentId };
+    let extra = { studentId };
     if (year && month) {
       const { start, end } = getMonthRange(parseInt(year), parseInt(month));
-      query.date = { $gte: start, $lte: end };
+      extra.date = { $gte: start, $lte: end };
     }
-    const records = await Attendance.find(query).sort({ date: -1 }).lean();
+    const records = await Attendance.find(instFilter(req, extra)).sort({ date: -1 }).lean();
     res.json(records);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -396,12 +421,26 @@ app.get('/api/attendance/weekly', authMiddleware, async (req, res) => {
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
       const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-      const records = await Attendance.find({ date: dateStr }).lean();
+      const records = await Attendance.find(instFilter(req, { date: dateStr })).lean();
       const present = records.filter(r => r.status === 'present').length;
       const absent = records.filter(r => r.status === 'absent').length;
       days.push({ date: dateStr, day: dayName, present, absent, total: present + absent });
     }
     res.json(days);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/migrate/claim', authMiddleware, async (req, res) => {
+  try {
+    const instId = req.institution._id.toString();
+    const migrated = {};
+    migrated.students = (await Student.updateMany({ institutionId: { $exists: false } }, { $set: { institutionId: instId } })).modifiedCount;
+    migrated.attendance = (await Attendance.updateMany({ institutionId: { $exists: false } }, { $set: { institutionId: instId } })).modifiedCount;
+    migrated.fees = (await Fee.updateMany({ institutionId: { $exists: false } }, { $set: { institutionId: instId } })).modifiedCount;
+    migrated.holidays = (await Holiday.updateMany({ institutionId: { $exists: false } }, { $set: { institutionId: instId } })).modifiedCount;
+    res.json({ message: 'Migration complete', migrated });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
