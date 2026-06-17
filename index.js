@@ -85,8 +85,11 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ error: 'Email & password required' });
     }
     const inst = await Institution.findOne({ email: email.trim().toLowerCase() });
-    if (!inst || inst.password !== hashPassword(password)) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+    if (!inst) {
+      return res.status(401).json({ error: 'Email does not exist' });
+    }
+    if (inst.password !== hashPassword(password)) {
+      return res.status(401).json({ error: 'Invalid password' });
     }
     res.json({ token: inst.token, institution: { id: inst._id, name: inst.name, email: inst.email } });
   } catch (err) {
