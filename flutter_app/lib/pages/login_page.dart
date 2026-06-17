@@ -5,7 +5,10 @@ import '../main_shell.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final bool isDark;
+  final VoidCallback onDarkToggle;
+  final VoidCallback onLanguageToggle;
+  const LoginPage({super.key, required this.isDark, required this.onDarkToggle, required this.onLanguageToggle});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -26,7 +29,11 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _loading = true);
     try {
       await AuthService.login(_emailCtrl.text.trim(), _passCtrl.text);
-      if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
+      if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainShell(
+        isDark: widget.isDark,
+        onDarkToggle: widget.onDarkToggle,
+        onLanguageToggle: widget.onLanguageToggle,
+      )));
     } catch (e) {
       if (mounted) { AppTheme.showSnack(context, '$e', isError: true); setState(() => _loading = false); }
     }
@@ -104,7 +111,7 @@ class _LoginPageState extends State<LoginPage> {
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 const Text("Don't have an account? ", style: TextStyle(color: AppTheme.textSecondary)),
                 GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage())),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RegisterPage(isDark: widget.isDark, onDarkToggle: widget.onDarkToggle, onLanguageToggle: widget.onLanguageToggle))),
                   child: const Text('Register', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700)),
                 ),
               ]),

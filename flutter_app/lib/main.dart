@@ -55,7 +55,7 @@ class _MyAppState extends State<MyApp> {
       theme: _isDark ? AppTheme.darkTheme : AppTheme.lightTheme,
       home: _showSplash
           ? const _SplashScreen()
-          : AuthService.isLoggedIn ? const MainShell() : const OnboardingPage(),
+          : AuthService.isLoggedIn ? MainShell(isDark: _isDark, onDarkToggle: toggleDark, onLanguageToggle: toggleLanguage) : OnboardingPage(onDarkToggle: toggleDark, onLanguageToggle: toggleLanguage),
     );
   }
 }

@@ -5,7 +5,10 @@ import '../main_shell.dart';
 import 'login_page.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+  final bool isDark;
+  final VoidCallback onDarkToggle;
+  final VoidCallback onLanguageToggle;
+  const RegisterPage({super.key, required this.isDark, required this.onDarkToggle, required this.onLanguageToggle});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -39,7 +42,11 @@ class _RegisterPageState extends State<RegisterPage> {
         _passCtrl.text,
       );
       if (mounted) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainShell(
+          isDark: widget.isDark,
+          onDarkToggle: widget.onDarkToggle,
+          onLanguageToggle: widget.onLanguageToggle,
+        )));
       }
     } catch (e) {
       if (mounted) {
@@ -153,7 +160,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   children: [
                     const Text('Already have an account? ', style: TextStyle(color: AppTheme.textSecondary)),
                     GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage())),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LoginPage(isDark: widget.isDark, onDarkToggle: widget.onDarkToggle, onLanguageToggle: widget.onLanguageToggle))),
                       child: const Text('Login', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700)),
                     ),
                   ],

@@ -9,20 +9,25 @@ import 'pages/attendance_page.dart';
 import 'pages/fees_page.dart';
 import 'pages/report_page.dart';
 import 'pages/settings_page.dart';
-import 'main.dart';
 import 'l10n/strings.dart';
 
 class MainShell extends StatelessWidget {
-  const MainShell({super.key});
+  final bool isDark;
+  final VoidCallback onDarkToggle;
+  final VoidCallback onLanguageToggle;
+  const MainShell({super.key, required this.isDark, required this.onDarkToggle, required this.onLanguageToggle});
 
   @override
   Widget build(BuildContext context) {
-    return const _Shell();
+    return _Shell(isDark: isDark, onDarkToggle: onDarkToggle, onLanguageToggle: onLanguageToggle);
   }
 }
 
 class _Shell extends StatefulWidget {
-  const _Shell();
+  final bool isDark;
+  final VoidCallback onDarkToggle;
+  final VoidCallback onLanguageToggle;
+  const _Shell({required this.isDark, required this.onDarkToggle, required this.onLanguageToggle});
 
   @override
   State<_Shell> createState() => _ShellState();
@@ -68,7 +73,7 @@ class _ShellState extends State<_Shell> {
     await AuthService.logout();
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const OnboardingPage()),
+      MaterialPageRoute(builder: (_) => OnboardingPage(onDarkToggle: widget.onDarkToggle, onLanguageToggle: widget.onLanguageToggle)),
       (route) => false,
     );
   }
@@ -166,9 +171,9 @@ class _ShellState extends State<_Shell> {
                   label: AppStrings.get('settings'),
                   isSelected: false,
                   onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => SettingsPage(
-                    isDark: MyApp.of(context)?.isDark ?? false,
-                    onDarkToggle: () => MyApp.of(context)?.toggleDark(),
-                    onLanguageToggle: () => MyApp.of(context)?.toggleLanguage(),
+                    isDark: widget.isDark,
+                    onDarkToggle: widget.onDarkToggle,
+                    onLanguageToggle: widget.onLanguageToggle,
                   ))); },
                 ),
                 const SizedBox(height: 8),
