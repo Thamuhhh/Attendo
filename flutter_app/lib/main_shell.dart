@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'theme.dart';
 import 'services/auth_service.dart';
@@ -37,6 +38,22 @@ class _ShellState extends State<_Shell> {
   ];
 
   final _titles = ['Dashboard', 'Students', 'Attendance', 'Fees', 'Report'];
+
+  final _selectedIcons = const [
+    Icons.dashboard_rounded,
+    Icons.people_rounded,
+    Icons.checklist_rounded,
+    Icons.payments_rounded,
+    Icons.bar_chart_rounded,
+  ];
+
+  final _outlinedIcons = const [
+    Icons.dashboard_outlined,
+    Icons.people_outlined,
+    Icons.checklist_outlined,
+    Icons.payments_outlined,
+    Icons.bar_chart_outlined,
+  ];
 
   @override
   void initState() { super.initState(); _pageCtrl = PageController(); }
@@ -142,16 +159,78 @@ class _ShellState extends State<_Shell> {
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (i) { _pageCtrl.animateToPage(i, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic); setState(() => _currentIndex = i); },
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard_rounded), label: 'Dashboard'),
-          NavigationDestination(icon: Icon(Icons.people_outlined), selectedIcon: Icon(Icons.people_rounded), label: 'Students'),
-          NavigationDestination(icon: Icon(Icons.checklist_outlined), selectedIcon: Icon(Icons.checklist_rounded), label: 'Attendance'),
-          NavigationDestination(icon: Icon(Icons.payments_outlined), selectedIcon: Icon(Icons.payments_rounded), label: 'Fees'),
-          NavigationDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart_rounded), label: 'Report'),
-        ],
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(color: AppTheme.primary.withValues(alpha: 0.2), blurRadius: 24, offset: const Offset(0, 8)),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              height: 68,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.white.withValues(alpha: 0.95), Colors.white.withValues(alpha: 0.9)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: List.generate(5, (i) {
+                  final isSelected = i == _currentIndex;
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        _pageCtrl.animateToPage(i, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic);
+                        setState(() => _currentIndex = i);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOutCubic,
+                        margin: EdgeInsets.all(isSelected ? 6 : 4),
+                        decoration: BoxDecoration(
+                          gradient: isSelected
+                              ? const LinearGradient(colors: [AppTheme.primary, AppTheme.primaryLight], begin: Alignment.topLeft, end: Alignment.bottomRight)
+                              : null,
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: isSelected
+                              ? [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))]
+                              : null,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              isSelected ? _selectedIcons[i] : _outlinedIcons[i],
+                              size: isSelected ? 22 : 20,
+                              color: isSelected ? Colors.white : Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _titles[i],
+                              style: TextStyle(
+                                fontSize: isSelected ? 11 : 10,
+                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                color: isSelected ? Colors.white : Colors.grey.shade400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
