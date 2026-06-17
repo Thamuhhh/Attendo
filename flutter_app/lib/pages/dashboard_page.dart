@@ -15,9 +15,11 @@ class _DashboardPageState extends State<DashboardPage> {
   TodayAttendance? _today;
   int _totalStudents = 0;
   bool _loading = true;
+  List<Map<String, dynamic>> _weeklyData = [];
+  bool _weeklyLoading = true;
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() { super.initState(); _load(); _loadWeekly(); }
 
   Future<void> _load() async {
     setState(() => _loading = true);
@@ -27,6 +29,13 @@ class _DashboardPageState extends State<DashboardPage> {
     } catch (e) {
       if (mounted) { setState(() => _loading = false); AppTheme.showSnack(context, 'Error: $e', isError: true); }
     }
+  }
+
+  Future<void> _loadWeekly() async {
+    try {
+      final data = await ApiService.getWeeklyAttendance();
+      if (mounted) setState(() { _weeklyData = data; _weeklyLoading = false; });
+    } catch (_) { if (mounted) setState(() => _weeklyLoading = false); }
   }
 
   String get _greeting {
@@ -103,6 +112,74 @@ class _DashboardPageState extends State<DashboardPage> {
             const SizedBox(width: 12),
             Expanded(child: _buildStatCard('Attendance Rate', percent, Icons.trending_up_rounded, percent >= 75 ? AppTheme.success : (percent >= 50 ? AppTheme.warning : AppTheme.danger), '$percent%')),
           ]),
+            const SizedBox(height: 20),
+          // Weekly chart
+          if (!_weeklyLoading && _weeklyData.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4))],
+              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.primaryLight]),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.bar_chart_rounded, color: Colors.white, size: 16),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text('This Week', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                ]),
+                const SizedBox(height: 20),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: List.generate(_weeklyData.length, (i) {
+                    final d = _weeklyData[i];
+                    final total = (d['total'] as int?) ?? 0;
+                    final present = (d['present'] as int?) ?? 0;
+                    final maxVal = _weeklyData.fold<int>(0, (a, b) => a > ((b['total'] as int?) ?? 0) ? a : ((b['total'] as int?) ?? 0));
+                    final height = maxVal > 0 ? (total / maxVal) * 100 : 0.0;
+                    final pct = total > 0 ? (present / total * 100).round() : 0;
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        child: Column(children: [
+                          Text('$present', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
+                          const SizedBox(height: 4),
+                          Container(
+                            height: 60,
+                            alignment: Alignment.bottomCenter,
+                            child: Container(
+                              width: 20,
+                              height: (height / 100) * 56,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: pct >= 75
+                                      ? [AppTheme.primaryLight, AppTheme.primary]
+                                      : pct >= 50
+                                          ? [AppTheme.warning, AppTheme.accent]
+                                          : [AppTheme.danger, AppTheme.warning],
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                ),
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(d['day'] ?? '', style: TextStyle(fontSize: 9, color: Colors.grey.shade500, fontWeight: FontWeight.w600)),
+                        ]),
+                      ),
+                    );
+                  }),
+                ),
+              ]),
+            ),
           const SizedBox(height: 28),
           // Today's attendance header
           Row(children: [

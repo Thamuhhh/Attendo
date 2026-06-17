@@ -54,6 +54,11 @@ class _FeesPageState extends State<FeesPage> {
     } finally { if (mounted) setState(() => _saving = false); }
   }
 
+  bool _isOverdue(int month) {
+    final now = DateTime.now();
+    return month < now.month && _year <= now.year;
+  }
+
   void _toggleFee(String studentId, int month) {
     final current = _pendingChanges[studentId]?[month] ?? _getCurrentStatus(studentId, month);
     final newStatus = current == 'paid' ? 'unpaid' : 'paid';
@@ -157,12 +162,20 @@ class _FeesPageState extends State<FeesPage> {
         Text('Add students to manage fees', style: TextStyle(fontSize: 13, color: Colors.grey.shade400)),
       ]));
     }
+
+    // Sort: unpaid first, then alphabetically
+    final sorted = List<StudentFeeStatus>.from(_summary!.summary)
+      ..sort((a, b) {
+        if (a.dueMonths != b.dueMonths) return b.dueMonths.compareTo(a.dueMonths);
+        return a.name.compareTo(b.name);
+      });
+
     return RefreshIndicator(
       color: AppTheme.primary, onRefresh: _load,
       child: StaggeredList(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-        itemCount: _summary!.summary.length,
-        itemBuilder: (_, i) => _buildStudentCard(_summary!.summary[i]),
+        itemCount: sorted.length,
+        itemBuilder: (_, i) => _buildStudentCard(sorted[i]),
       ),
     );
   }
@@ -188,40 +201,47 @@ class _FeesPageState extends State<FeesPage> {
           AppTheme.percentBadge(pct),
         ]),
         const SizedBox(height: 12),
-        Wrap(
-          spacing: 6, runSpacing: 6,
-          children: List.generate(12, (m) {
-            final month = m + 1;
-            final status = _getDisplayStatus(student.id, month);
-            final isPaid = status == 'paid';
-            final isChanged = _pendingChanges[student.id]?.containsKey(month) ?? false;
-            return GestureDetector(
-              onTap: () => _toggleFee(student.id, month),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 38, height: 38,
-                decoration: BoxDecoration(
-                  color: isPaid ? AppTheme.success.withValues(alpha: 0.15) : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(10),
-                  border: isChanged
-                      ? Border.all(color: isPaid ? AppTheme.success : AppTheme.danger, width: 2)
-                      : isPaid ? Border.all(color: AppTheme.success.withValues(alpha: 0.3))
-                          : Border.all(color: Colors.grey.shade200),
-                ),
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Text(_months[month - 1], style: TextStyle(
-                    fontSize: 9, fontWeight: FontWeight.w600,
-                    color: isPaid ? AppTheme.success : Colors.grey.shade500,
-                  )),
-                  Icon(
-                    isPaid ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                    size: 14, color: isPaid ? AppTheme.success : Colors.grey.shade400,
+          Wrap(
+            spacing: 6, runSpacing: 6,
+            children: List.generate(12, (m) {
+              final month = m + 1;
+              final status = _getDisplayStatus(student.id, month);
+              final isPaid = status == 'paid';
+              final isChanged = _pendingChanges[student.id]?.containsKey(month) ?? false;
+              final overdue = !isPaid && _isOverdue(month);
+              return GestureDetector(
+                onTap: () => _toggleFee(student.id, month),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 38, height: 38,
+                  decoration: BoxDecoration(
+                    color: isPaid
+                        ? AppTheme.success.withValues(alpha: 0.15)
+                        : overdue
+                            ? AppTheme.danger.withValues(alpha: 0.1)
+                            : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(10),
+                    border: isChanged
+                        ? Border.all(color: isPaid ? AppTheme.success : AppTheme.danger, width: 2)
+                        : overdue
+                            ? Border.all(color: AppTheme.danger.withValues(alpha: 0.3))
+                            : isPaid ? Border.all(color: AppTheme.success.withValues(alpha: 0.3))
+                                : Border.all(color: Colors.grey.shade200),
                   ),
-                ]),
-              ),
-            );
-          }),
-        ),
+                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Text(_months[month - 1], style: TextStyle(
+                      fontSize: 9, fontWeight: FontWeight.w600,
+                      color: isPaid ? AppTheme.success : (overdue ? AppTheme.danger : Colors.grey.shade500),
+                    )),
+                    Icon(
+                      isPaid ? Icons.check_circle_rounded : (overdue ? Icons.warning_amber_rounded : Icons.radio_button_unchecked_rounded),
+                      size: 14, color: isPaid ? AppTheme.success : (overdue ? AppTheme.danger : Colors.grey.shade400),
+                    ),
+                  ]),
+                ),
+              );
+            }),
+          ),
       ]),
     );
   }

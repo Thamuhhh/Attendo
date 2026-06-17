@@ -101,6 +101,12 @@ class ApiService {
     throw Exception('Failed to load fee records');
   }
 
+  static Future<List<Map<String, dynamic>>> getWeeklyAttendance() async {
+    final res = await http.get(Uri.parse('$baseUrl/attendance/weekly'), headers: _headers).timeout(const Duration(seconds: 60));
+    if (res.statusCode == 200) return (jsonDecode(res.body) as List).cast<Map<String, dynamic>>();
+    throw Exception('Failed to load weekly attendance');
+  }
+
   static Future<void> saveFees(List<Map<String, dynamic>> records) async {
     final res = await http.post(
       Uri.parse('$baseUrl/fees'),

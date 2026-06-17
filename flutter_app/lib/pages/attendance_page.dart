@@ -60,8 +60,8 @@ class _AttendancePageState extends State<AttendancePage> {
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       builder: (ctx, child) => Theme(
-        data: AppTheme.theme.copyWith(
-          colorScheme: AppTheme.theme.colorScheme.copyWith(primary: AppTheme.primary),
+        data: AppTheme.lightTheme.copyWith(
+          colorScheme: AppTheme.lightTheme.colorScheme.copyWith(primary: AppTheme.primary),
         ),
         child: child!,
       ),

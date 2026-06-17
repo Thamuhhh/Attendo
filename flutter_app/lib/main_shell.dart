@@ -8,6 +8,9 @@ import 'pages/students_page.dart';
 import 'pages/attendance_page.dart';
 import 'pages/fees_page.dart';
 import 'pages/report_page.dart';
+import 'pages/settings_page.dart';
+import 'main.dart';
+import 'l10n/strings.dart';
 
 class MainShell extends StatelessWidget {
   const MainShell({super.key});
@@ -158,6 +161,17 @@ class _ShellState extends State<_Shell> {
                   isSelected: _currentIndex == 4,
                   onTap: () { Navigator.pop(context); _pageCtrl.animateToPage(4, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic); setState(() => _currentIndex = 4); },
                 ),
+                _DrawerItem(
+                  icon: Icons.settings_rounded,
+                  label: AppStrings.get('settings'),
+                  isSelected: false,
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => SettingsPage(
+                    isDark: MyApp.of(context)?.isDark ?? false,
+                    onDarkToggle: () => MyApp.of(context)?.toggleDark(),
+                    onLanguageToggle: () => MyApp.of(context)?.toggleLanguage(),
+                  ))); },
+                ),
+                const SizedBox(height: 8),
                 const Spacer(),
                 // Logout
                 Container(

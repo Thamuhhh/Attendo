@@ -12,16 +12,35 @@ class AppTheme {
   static const Color danger = Color(0xFFEF4444);
   static const Color warning = Color(0xFFF59E0B);
 
-  static ThemeData get theme {
+  static ThemeData get lightTheme {
+    return _baseTheme(
+      surface,
+      Colors.white,
+      Colors.grey.shade50,
+      Colors.grey.shade300,
+    );
+  }
+
+  static ThemeData get darkTheme {
+    return _baseTheme(
+      const Color(0xFF0D0D1A),
+      const Color(0xFF1A1A2E),
+      const Color(0xFF2A2A3E),
+      const Color(0xFF3A3A4E),
+    );
+  }
+
+  static ThemeData _baseTheme(Color scaffoldBg, Color cardBg, Color inputFill, Color inputBorder) {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primary,
         primary: primary,
         secondary: accent,
-        surface: surface,
+        surface: scaffoldBg,
+        brightness: scaffoldBg == surface ? Brightness.light : Brightness.dark,
       ),
-      scaffoldBackgroundColor: surface,
+      scaffoldBackgroundColor: scaffoldBg,
       appBarTheme: const AppBarTheme(
         centerTitle: true,
         elevation: 0,
@@ -37,14 +56,14 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: inputFill,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(color: inputBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(color: inputBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -64,7 +83,7 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         elevation: 8,
-        backgroundColor: Colors.white,
+        backgroundColor: cardBg,
         indicatorColor: primary.withValues(alpha: 0.12),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {

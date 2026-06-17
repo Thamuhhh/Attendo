@@ -3,6 +3,7 @@ import '../models/student.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
 import '../widgets/widgets.dart';
+import 'student_profile_page.dart';
 
 class StudentsPage extends StatefulWidget {
   const StudentsPage({super.key});
@@ -208,6 +209,10 @@ class _StudentsPageState extends State<StudentsPage> {
                           child: InkWell(
                             borderRadius: BorderRadius.circular(16),
                             onLongPress: () => _confirmDelete(s),
+                            child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StudentProfilePage(student: s))),
+                            onLongPress: () => _confirmDelete(s),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                               child: Row(children: [
@@ -248,6 +253,7 @@ class _StudentsPageState extends State<StudentsPage> {
                                 ]),
                               ]),
                             ),
+                          ),
                           ),
                         );
                       },

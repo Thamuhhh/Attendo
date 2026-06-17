@@ -334,6 +334,25 @@ app.get('/api/report/monthly', authMiddleware, async (req, res) => {
   }
 });
 
+app.get('/api/attendance/weekly', authMiddleware, async (req, res) => {
+  try {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const records = await db.attendance.find({ date: dateStr });
+      const present = records.filter(r => r.status === 'present').length;
+      const absent = records.filter(r => r.status === 'absent').length;
+      days.push({ date: dateStr, day: dayName, present, absent, total: present + absent });
+    }
+    res.json(days);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

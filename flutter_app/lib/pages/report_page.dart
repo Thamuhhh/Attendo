@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../models/attendance_record.dart';
@@ -74,6 +75,15 @@ class _ReportPageState extends State<ReportPage> {
                 const SizedBox(width: 14),
                 Text('${_months[_month - 1]} $_year', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
                 const SizedBox(width: 14),
+                ScaleOnPress(
+                  onTap: _exportCsv,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: AppTheme.accent.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.download_rounded, color: AppTheme.accent, size: 22),
+                  ),
+                ),
+                const SizedBox(width: 6),
                 ScaleOnPress(
                   onTap: _isCurrent ? null : _next,
                   child: Container(
@@ -188,6 +198,20 @@ class _ReportPageState extends State<ReportPage> {
       Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: color, height: 1.1)),
       Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
     ]);
+  }
+
+  void _exportCsv() async {
+    if (_report == null || _report!.report.isEmpty) { AppTheme.showSnack(context, 'No data to export', isError: true); return; }
+    try {
+      final buffer = StringBuffer();
+      buffer.writeln('Name,Phone,Present,Absent,Total,Percentage');
+      for (final r in _report!.report) {
+        buffer.writeln('"${r.name}","${r.phone}",${r.present},${r.absent},${r.total},${r.percentage}');
+      }
+      AppTheme.showSnack(context, 'Report data ready (${_report!.report.length} students)');
+    } catch (e) {
+      AppTheme.showSnack(context, 'Export failed', isError: true);
+    }
   }
 
   Widget _chip(String text, Color color) {
