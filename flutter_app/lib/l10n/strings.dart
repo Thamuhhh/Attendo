@@ -4,7 +4,7 @@ class AppStrings {
   AppStrings._();
 
   static const _en = {
-    'app_name': 'Tuition Attendance',
+    'app_name': 'Attendo',
     'dashboard': 'Dashboard',
     'students': 'Students',
     'attendance': 'Attendance',
@@ -52,7 +52,7 @@ class AppStrings {
   };
 
   static const _ta = {
-    'app_name': 'கல்வி வருகை',
+    'app_name': 'Attendo',
     'dashboard': 'டாஷ்போர்டு',
     'students': 'மாணவர்கள்',
     'attendance': 'வருகைப்பதிவு',

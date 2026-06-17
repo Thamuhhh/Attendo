@@ -55,7 +55,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Tuition Attendance',
+      title: 'Attendo',
       debugShowCheckedModeBanner: false,
       theme: _isDark ? AppTheme.darkTheme : AppTheme.lightTheme,
       home: AuthService.isLoggedIn 
