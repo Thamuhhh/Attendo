@@ -84,8 +84,8 @@ class _FeesPageState extends State<FeesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final totalPaid = _summary == null ? 0 : _summary!.summary.map((s) => s.paidMonths).reduce((a, b) => a + b);
-    final totalDue = _summary == null ? 0 : _summary!.summary.map((s) => s.dueMonths).reduce((a, b) => a + b);
+    final totalPaid = _summary == null || _summary!.summary.isEmpty ? 0 : _summary!.summary.map((s) => s.paidMonths).reduce((a, b) => a + b);
+    final totalDue = _summary == null || _summary!.summary.isEmpty ? 0 : _summary!.summary.map((s) => s.dueMonths).reduce((a, b) => a + b);
 
     return BackgroundDecoration(
       child: Stack(

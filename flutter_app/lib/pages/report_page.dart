@@ -50,8 +50,8 @@ class _ReportPageState extends State<ReportPage> {
 
   @override
   Widget build(BuildContext context) {
-    final totalPresent = _report == null ? 0 : _report!.report.map((r) => r.present).reduce((a, b) => a + b);
-    final totalAbsent = _report == null ? 0 : _report!.report.map((r) => r.absent).reduce((a, b) => a + b);
+    final totalPresent = _report == null || _report!.report.isEmpty ? 0 : _report!.report.map((r) => r.present).reduce((a, b) => a + b);
+    final totalAbsent = _report == null || _report!.report.isEmpty ? 0 : _report!.report.map((r) => r.absent).reduce((a, b) => a + b);
     final totalAll = totalPresent + totalAbsent;
     final avgPct = totalAll > 0 ? (totalPresent / totalAll * 100).round() : 0;
 
