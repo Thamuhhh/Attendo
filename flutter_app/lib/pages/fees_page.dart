@@ -61,6 +61,10 @@ class _FeesPageState extends State<FeesPage> {
     return month < now.month && _year <= now.year;
   }
 
+  bool _isFutureMonth(int month) {
+    return _year > DateTime.now().year || (_year == DateTime.now().year && month > DateTime.now().month);
+  }
+
   void _toggleFee(String studentId, int month) {
     final current = _pendingChanges[studentId]?[month] ?? _getCurrentStatus(studentId, month);
     final newStatus = current == 'paid' ? 'unpaid' : 'paid';
@@ -217,33 +221,38 @@ class _FeesPageState extends State<FeesPage> {
               final isPaid = status == 'paid';
               final isChanged = _pendingChanges[student.id]?.containsKey(month) ?? false;
               final overdue = !isPaid && _isOverdue(month);
+              final isFuture = _isFutureMonth(month);
               return GestureDetector(
-                onTap: () => _toggleFee(student.id, month),
+                onTap: isFuture ? null : () => _toggleFee(student.id, month),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   width: 38, height: 38,
                   decoration: BoxDecoration(
-                    color: isPaid
-                        ? AppTheme.success.withValues(alpha: 0.15)
-                        : overdue
-                            ? AppTheme.danger.withValues(alpha: 0.1)
-                            : Colors.grey.shade100,
+                    color: isFuture
+                        ? Colors.grey.shade50
+                        : isPaid
+                            ? AppTheme.success.withValues(alpha: 0.15)
+                            : overdue
+                                ? AppTheme.danger.withValues(alpha: 0.1)
+                                : Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(10),
-                    border: isChanged
-                        ? Border.all(color: isPaid ? AppTheme.success : AppTheme.danger, width: 2)
-                        : overdue
-                            ? Border.all(color: AppTheme.danger.withValues(alpha: 0.3))
-                            : isPaid ? Border.all(color: AppTheme.success.withValues(alpha: 0.3))
-                                : Border.all(color: Colors.grey.shade200),
+                    border: isFuture
+                        ? Border.all(color: Colors.grey.shade200)
+                        : isChanged
+                            ? Border.all(color: isPaid ? AppTheme.success : AppTheme.danger, width: 2)
+                            : overdue
+                                ? Border.all(color: AppTheme.danger.withValues(alpha: 0.3))
+                                : isPaid ? Border.all(color: AppTheme.success.withValues(alpha: 0.3))
+                                    : Border.all(color: Colors.grey.shade200),
                   ),
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                     Text(_months[month - 1], style: TextStyle(
                       fontSize: 9, fontWeight: FontWeight.w600,
-                      color: isPaid ? AppTheme.success : (overdue ? AppTheme.danger : Colors.grey.shade500),
+                      color: isFuture ? Colors.grey.shade300 : (isPaid ? AppTheme.success : (overdue ? AppTheme.danger : Colors.grey.shade500)),
                     )),
                     Icon(
-                      isPaid ? Icons.check_circle_rounded : (overdue ? Icons.warning_amber_rounded : Icons.radio_button_unchecked_rounded),
-                      size: 14, color: isPaid ? AppTheme.success : (overdue ? AppTheme.danger : Colors.grey.shade400),
+                      isFuture ? Icons.lock_rounded : (isPaid ? Icons.check_circle_rounded : (overdue ? Icons.warning_amber_rounded : Icons.radio_button_unchecked_rounded)),
+                      size: 14, color: isFuture ? Colors.grey.shade300 : (isPaid ? AppTheme.success : (overdue ? AppTheme.danger : Colors.grey.shade400)),
                     ),
                   ]),
                 ),
@@ -316,11 +325,12 @@ class _FeesPageState extends State<FeesPage> {
               title: const Text('Select Month'),
               children: List.generate(12, (i) {
                 final m = i + 1;
+                final isFuture = _isFutureMonth(m);
                 return SimpleDialogOption(
-                  onPressed: () => Navigator.pop(ctx, m),
+                  onPressed: isFuture ? null : () => Navigator.pop(ctx, m),
                   child: Text(_months[m - 1], style: TextStyle(
                     fontWeight: m == _month ? FontWeight.w700 : FontWeight.normal,
-                    color: m == _month ? AppTheme.primary : null,
+                    color: isFuture ? Colors.grey.shade300 : (m == _month ? AppTheme.primary : null),
                   )),
                 );
               }),
