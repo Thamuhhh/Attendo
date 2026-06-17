@@ -219,7 +219,7 @@ class _SlideWidget extends StatelessWidget {
                   child: data.imageUrl != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(32),
-                          child: Image.network(data.imageUrl!, width: 100, height: 100, fit: BoxFit.contain),
+                          child: Image.network(data.imageUrl!, width: 100, height: 100, fit: BoxFit.contain, errorBuilder: (_, __, ___) => Icon(data.icon ?? Icons.school, size: 72, color: data.color)),
                         )
                       : Icon(data.icon, size: 72, color: data.color),
                 ),
