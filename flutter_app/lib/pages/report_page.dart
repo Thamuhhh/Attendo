@@ -39,7 +39,7 @@ class _ReportPageState extends State<ReportPage> {
       final r = await ApiService.getMonthlyReport(_year, _month);
       if (mounted) setState(() { _report = r; _loading = false; });
     } catch (e) {
-      if (mounted) { setState(() => _loading = false); AppTheme.showSnack(context, 'Error: $e', isError: true); }
+      if (mounted) { setState(() => _loading = false); AppTheme.showSnack(context, 'Failed to load report', isError: true); }
     }
   }
 
@@ -319,7 +319,7 @@ class _ReportPageState extends State<ReportPage> {
         OpenFile.open(file.path);
       }
     } catch (e) {
-      if (mounted) AppTheme.showSnack(context, 'Export failed: $e', isError: true);
+      if (mounted) AppTheme.showSnack(context, 'Export failed', isError: true);
     }
   }
 
@@ -379,7 +379,7 @@ class _ReportPageState extends State<ReportPage> {
         OpenFile.open(file.path);
       }
     } catch (e) {
-      if (mounted) AppTheme.showSnack(context, 'PDF export failed: $e', isError: true);
+      if (mounted) AppTheme.showSnack(context, 'PDF export failed', isError: true);
     } finally {
       if (mounted) setState(() => _exporting = false);
     }

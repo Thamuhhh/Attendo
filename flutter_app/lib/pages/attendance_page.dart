@@ -70,7 +70,7 @@ class _AttendancePageState extends State<AttendancePage> {
         _loading = false;
       });
     } catch (e) {
-      if (mounted) { setState(() => _loading = false); AppTheme.showSnack(context, 'Error: $e', isError: true); }
+      if (mounted) { setState(() => _loading = false); AppTheme.showSnack(context, 'Failed to load attendance', isError: true); }
     }
   }
 

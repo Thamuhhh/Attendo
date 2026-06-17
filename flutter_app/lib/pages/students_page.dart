@@ -184,7 +184,28 @@ class _StudentsPageState extends State<StudentsPage> {
                       itemCount: _filtered.length,
                       itemBuilder: (_, i) {
                         final s = _filtered[i];
-                        return Card(
+                        return Dismissible(
+                          key: ValueKey(s.id),
+                          direction: DismissDirection.endToStart,
+                          confirmDismiss: (_) async => await AppTheme.showConfirm(context, 'Delete Student', 'Remove "${s.name}" permanently?', confirmLabel: 'Delete'),
+                          onDismissed: (_) async {
+                            try {
+                              await ApiService.deleteStudent(s.id);
+                              if (mounted) AppTheme.showToast(context, 'Deleted successfully');
+                              _load();
+                            } catch (e) {
+                              if (mounted) AppTheme.showToast(context, 'Delete failed', isError: true);
+                              _load();
+                            }
+                          },
+                          background: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            decoration: BoxDecoration(color: AppTheme.danger, borderRadius: BorderRadius.circular(16)),
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 24),
+                            child: const Icon(Icons.delete_rounded, color: Colors.white, size: 28),
+                          ),
+                          child: Card(
                           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                           child: InkWell(
                             borderRadius: BorderRadius.circular(16),
@@ -234,9 +255,10 @@ class _StudentsPageState extends State<StudentsPage> {
                               ]),
                             ),
                           ),
-                          ),
-                        );
-                      },
+                        ),
+                      ),
+                      );
+                    },
                     ),
                   ),
       ),

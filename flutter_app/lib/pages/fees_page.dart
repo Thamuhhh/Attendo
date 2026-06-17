@@ -35,7 +35,7 @@ class _FeesPageState extends State<FeesPage> {
         setState(() { _summary = s; _loading = false; _pendingChanges.clear(); });
       }
     } catch (e) {
-      if (mounted) { setState(() => _loading = false); AppTheme.showSnack(context, 'Error: $e', isError: true); }
+      if (mounted) { setState(() => _loading = false); AppTheme.showSnack(context, 'Failed to load fees', isError: true); }
     }
   }
 
@@ -52,7 +52,7 @@ class _FeesPageState extends State<FeesPage> {
       await ApiService.saveFees(records);
       if (mounted) { AppTheme.showSnack(context, 'Fees updated!'); _pendingChanges.clear(); _load(); }
     } catch (e) {
-      if (mounted) AppTheme.showSnack(context, 'Save failed: $e', isError: true);
+      if (mounted) AppTheme.showSnack(context, 'Save failed', isError: true);
     } finally { if (mounted) setState(() => _saving = false); }
   }
 
