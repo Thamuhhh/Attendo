@@ -18,7 +18,7 @@ class ApiService {
   static void startKeepAlive() {
     _keepAliveTimer?.cancel();
     _keepAliveTimer = Timer.periodic(const Duration(minutes: 5), (_) {
-      http.get(Uri.parse('$productionUrl/auth/me'), headers: AuthService.authHeaders).timeout(const Duration(seconds: 10)).catchError((_) {});
+      http.get(Uri.parse('$productionUrl/auth/me'), headers: AuthService.authHeaders).timeout(const Duration(seconds: 10)).then((_) {}, onError: (_) {});
     });
   }
 

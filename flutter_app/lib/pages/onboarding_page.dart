@@ -1,21 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
 import 'register_page.dart';
 import 'login_page.dart';
 
-class OnboardingPage extends StatefulWidget {
-  final bool isDark;
-  final VoidCallback onDarkToggle;
-  final VoidCallback onLanguageToggle;
-  final bool notificationsEnabled;
-  final VoidCallback onNotificationToggle;
-  const OnboardingPage({super.key, this.isDark = false, required this.onDarkToggle, required this.onLanguageToggle, this.notificationsEnabled = false, required this.onNotificationToggle});
+class OnboardingPage extends ConsumerStatefulWidget {
+  const OnboardingPage({super.key});
 
   @override
-  State<OnboardingPage> createState() => _OnboardingPageState();
+  ConsumerState<OnboardingPage> createState() => _OnboardingPageState();
 }
 
-class _OnboardingPageState extends State<OnboardingPage> with TickerProviderStateMixin {
+class _OnboardingPageState extends ConsumerState<OnboardingPage> with TickerProviderStateMixin {
   late final PageController _pageCtrl;
   late final AnimationController _pulseCtrl;
   int _current = 0;
@@ -139,7 +135,7 @@ class _OnboardingPageState extends State<OnboardingPage> with TickerProviderStat
                     if (_current < _slides.length - 1) {
                       _pageCtrl.nextPage(duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
                     } else {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => RegisterPage(isDark: widget.isDark, onDarkToggle: widget.onDarkToggle, onLanguageToggle: widget.onLanguageToggle, notificationsEnabled: widget.notificationsEnabled, onNotificationToggle: widget.onNotificationToggle)));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage()));
                     }
                   },
                   child: Center(
@@ -165,7 +161,7 @@ class _OnboardingPageState extends State<OnboardingPage> with TickerProviderStat
           const SizedBox(height: 12),
           if (_current < _slides.length - 1)
             TextButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RegisterPage(isDark: widget.isDark, onDarkToggle: widget.onDarkToggle, onLanguageToggle: widget.onLanguageToggle, notificationsEnabled: widget.notificationsEnabled, onNotificationToggle: widget.onNotificationToggle))),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage())),
               child: Text('Skip', style: TextStyle(color: Colors.grey.shade500, fontWeight: FontWeight.w600)),
             ),
           const SizedBox(height: 8),
@@ -174,7 +170,7 @@ class _OnboardingPageState extends State<OnboardingPage> with TickerProviderStat
             children: [
               Text('Already have an account? ', style: TextStyle(color: Colors.grey.shade500)),
               GestureDetector(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LoginPage(isDark: widget.isDark, onDarkToggle: widget.onDarkToggle, onLanguageToggle: widget.onLanguageToggle, notificationsEnabled: widget.notificationsEnabled, onNotificationToggle: widget.onNotificationToggle))),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage())),
                 child: Text('Login', style: TextStyle(color: _slides[_current].color, fontWeight: FontWeight.w700)),
               ),
             ],

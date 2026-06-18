@@ -45,8 +45,6 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     final present = _today?.records.where((r) => r.status == 'present').length ?? 0;
     final absent = _today?.records.where((r) => r.status == 'absent').length ?? 0;
-    final total = _today?.records.length ?? 0;
-    final percent = total > 0 ? (present / total * 100).round() : 0;
 
     return BackgroundDecoration(
       child: RefreshIndicator(

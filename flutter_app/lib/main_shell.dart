@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme.dart';
 import 'services/auth_service.dart';
 import 'services/api_service.dart';
@@ -10,34 +11,16 @@ import 'pages/fees_page.dart';
 import 'pages/report_page.dart';
 import 'pages/settings_page.dart';
 import 'l10n/strings.dart';
+import 'providers/auth_provider.dart';
 
-class MainShell extends StatelessWidget {
-  final bool isDark;
-  final VoidCallback onDarkToggle;
-  final VoidCallback onLanguageToggle;
-  final bool notificationsEnabled;
-  final VoidCallback onNotificationToggle;
-  const MainShell({super.key, required this.isDark, required this.onDarkToggle, required this.onLanguageToggle, required this.notificationsEnabled, required this.onNotificationToggle});
+class MainShell extends ConsumerStatefulWidget {
+  const MainShell({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return _Shell(isDark: isDark, onDarkToggle: onDarkToggle, onLanguageToggle: onLanguageToggle, notificationsEnabled: notificationsEnabled, onNotificationToggle: onNotificationToggle);
-  }
+  ConsumerState<MainShell> createState() => _ShellState();
 }
 
-class _Shell extends StatefulWidget {
-  final bool isDark;
-  final VoidCallback onDarkToggle;
-  final VoidCallback onLanguageToggle;
-  final bool notificationsEnabled;
-  final VoidCallback onNotificationToggle;
-  const _Shell({required this.isDark, required this.onDarkToggle, required this.onLanguageToggle, required this.notificationsEnabled, required this.onNotificationToggle});
-
-  @override
-  State<_Shell> createState() => _ShellState();
-}
-
-class _ShellState extends State<_Shell> {
+class _ShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
   late final PageController _pageCtrl;
 
@@ -50,14 +33,6 @@ class _ShellState extends State<_Shell> {
   ];
 
   final _titles = ['Dashboard', 'Students', 'Attendance', 'Fees', 'Report'];
-
-  final _selectedIcons = const [
-    Icons.dashboard_rounded,
-    Icons.people_rounded,
-    Icons.checklist_rounded,
-    Icons.payments_rounded,
-    Icons.bar_chart_rounded,
-  ];
 
   final _outlinedIcons = const [
     Icons.dashboard_outlined,
@@ -74,10 +49,10 @@ class _ShellState extends State<_Shell> {
   void dispose() { ApiService.stopKeepAlive(); _pageCtrl.dispose(); super.dispose(); }
 
   void _logout() async {
-    await AuthService.logout();
+    await ref.read(authProvider.notifier).logout();
     if (!context.mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => OnboardingPage(onDarkToggle: widget.onDarkToggle, onLanguageToggle: widget.onLanguageToggle, notificationsEnabled: widget.notificationsEnabled, onNotificationToggle: widget.onNotificationToggle)),
+        MaterialPageRoute(builder: (_) => const OnboardingPage()),
         (route) => false,
       );
   }
@@ -92,7 +67,6 @@ class _ShellState extends State<_Shell> {
           child: SafeArea(
             child: Column(
               children: [
-                // Header
                 Container(
                   padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
                   decoration: BoxDecoration(
@@ -139,7 +113,6 @@ class _ShellState extends State<_Shell> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Menu items
                 _DrawerItem(
                   icon: Icons.dashboard_rounded,
                   label: 'Dashboard',
@@ -174,17 +147,10 @@ class _ShellState extends State<_Shell> {
                   icon: Icons.settings_rounded,
                   label: AppStrings.get('settings'),
                   isSelected: false,
-                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => SettingsPage(
-                    isDark: widget.isDark,
-                    onDarkToggle: widget.onDarkToggle,
-                    onLanguageToggle: widget.onLanguageToggle,
-                    notificationsEnabled: widget.notificationsEnabled,
-                    onNotificationToggle: widget.onNotificationToggle,
-                  ))); },
+                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage())); },
                 ),
                 const SizedBox(height: 8),
                 const Spacer(),
-                // Logout
                 Container(
                   margin: const EdgeInsets.fromLTRB(12, 0, 12, 16),
                   decoration: BoxDecoration(

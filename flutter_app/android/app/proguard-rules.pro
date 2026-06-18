@@ -1,0 +1,1 @@
+-keep class com.tuition.attendance_app.** { *; }

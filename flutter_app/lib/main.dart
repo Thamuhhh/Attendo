@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
 import 'services/api_service.dart';
 import 'pages/onboarding_page.dart';
 import 'main_shell.dart';
-import 'l10n/strings.dart';
+import 'providers/settings_provider.dart';
+import 'providers/auth_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends ConsumerState<MyApp> {
   bool _initialized = false;
-  bool _isDark = false;
-  bool _notificationsEnabled = true;
 
   @override
   void initState() {
@@ -31,47 +31,33 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _init() async {
-    await Future.wait([
-      AuthService.init(),
-      NotificationService().initialize(),
-    ]);
+    await NotificationService().initialize();
     if (!mounted) return;
     ApiService.startKeepAlive();
     if (AuthService.isLoggedIn) ApiService.warmUp();
     final enabled = await NotificationService().isEnabled;
     if (!mounted) return;
-    setState(() {
-      _notificationsEnabled = enabled;
-      _initialized = true;
-    });
+    if (enabled != ref.read(settingsProvider).notificationsEnabled) {
+      ref.read(settingsProvider.notifier).toggleNotifications();
+    }
+    setState(() => _initialized = true);
     NotificationService().scheduleDailyReminder();
-  }
-
-  void toggleDark() { setState(() => _isDark = !_isDark); }
-
-  void toggleLanguage() {
-    setState(() {
-      AppStrings.setLanguage(!AppStrings.isTamil);
-    });
-  }
-
-  void toggleNotifications() {
-    final newVal = !_notificationsEnabled;
-    NotificationService().setEnabled(newVal);
-    setState(() => _notificationsEnabled = newVal);
   }
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider);
+    final auth = ref.watch(authProvider);
+
     return MaterialApp(
       title: 'Attendo',
       debugShowCheckedModeBanner: false,
-      theme: _isDark ? AppTheme.darkTheme : AppTheme.lightTheme,
+      theme: settings.isDark ? AppTheme.darkTheme : AppTheme.lightTheme,
       home: !_initialized
         ? const _Splash()
-        : AuthService.isLoggedIn 
-          ? MainShell(isDark: _isDark, onDarkToggle: toggleDark, onLanguageToggle: toggleLanguage, notificationsEnabled: _notificationsEnabled, onNotificationToggle: toggleNotifications) 
-          : OnboardingPage(onDarkToggle: toggleDark, onLanguageToggle: toggleLanguage, notificationsEnabled: _notificationsEnabled, onNotificationToggle: toggleNotifications),
+        : auth.isLoggedIn
+          ? const MainShell()
+          : const OnboardingPage(),
     );
   }
 }

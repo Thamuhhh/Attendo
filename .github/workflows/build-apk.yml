@@ -22,9 +22,28 @@ jobs:
 
       - run: flutter pub get
 
-      - run: flutter build apk --debug
+      - name: Create key.properties for CI
+        run: |
+          cat > android/key.properties << EOF
+          storePassword=attendopass
+          keyPassword=attendopass
+          keyAlias=attendokey
+          storeFile=keystore.jks
+          EOF
+
+      - name: Auto-increment version
+        run: |
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          echo "BUILD_NUMBER=$COMMIT_COUNT" >> $GITHUB_ENV
+          echo "BUILD_NAME=1.0.$COMMIT_COUNT" >> $GITHUB_ENV
+
+      - run: flutter build apk --release
+
+      - name: Rename APK
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk "build/app/outputs/flutter-apk/attendo-v$BUILD_NAME.apk"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: flutter_app/build/app/outputs/flutter-apk/app-debug.apk
+          name: attendo-release-apk
+          path: flutter_app/build/app/outputs/flutter-apk/attendo-*.apk

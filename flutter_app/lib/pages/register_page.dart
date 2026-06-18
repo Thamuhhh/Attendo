@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
-import '../services/auth_service.dart';
-import '../main_shell.dart';
+import '../providers/auth_provider.dart';
 import 'login_page.dart';
 
-class RegisterPage extends StatefulWidget {
-  final bool isDark;
-  final VoidCallback onDarkToggle;
-  final VoidCallback onLanguageToggle;
-  final bool notificationsEnabled;
-  final VoidCallback onNotificationToggle;
-  const RegisterPage({super.key, required this.isDark, required this.onDarkToggle, required this.onLanguageToggle, required this.notificationsEnabled, required this.onNotificationToggle});
+class RegisterPage extends ConsumerStatefulWidget {
+  const RegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
@@ -37,21 +32,11 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      await AuthService.register(
-        _nameCtrl.text.trim(),
-        _emailCtrl.text.trim(),
-        _phoneCtrl.text.trim(),
-        _passCtrl.text,
+      await ref.read(authProvider.notifier).register(
+        _nameCtrl.text.trim(), _emailCtrl.text.trim(),
+        _phoneCtrl.text.trim(), _passCtrl.text,
       );
-      if (mounted) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainShell(
-          isDark: widget.isDark,
-          onDarkToggle: widget.onDarkToggle,
-          onLanguageToggle: widget.onLanguageToggle,
-          notificationsEnabled: widget.notificationsEnabled,
-          onNotificationToggle: widget.onNotificationToggle,
-        )));
-      }
+      if (mounted) Navigator.popUntil(context, (route) => route.isFirst);
     } catch (e) {
       if (mounted) {
         AppTheme.showSnack(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
@@ -143,8 +128,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 32),
                 SizedBox(
-                  width: double.infinity,
-                  height: 54,
+                  width: double.infinity, height: 54,
                   child: ElevatedButton(
                     onPressed: _loading ? null : _register,
                     style: ElevatedButton.styleFrom(
@@ -164,7 +148,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   children: [
                     const Text('Already have an account? ', style: TextStyle(color: AppTheme.textSecondary)),
                     GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LoginPage(isDark: widget.isDark, onDarkToggle: widget.onDarkToggle, onLanguageToggle: widget.onLanguageToggle, notificationsEnabled: widget.notificationsEnabled, onNotificationToggle: widget.onNotificationToggle))),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage())),
                       child: const Text('Login', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700)),
                     ),
                   ],

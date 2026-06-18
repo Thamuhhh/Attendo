@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
 import '../l10n/strings.dart';
+import '../providers/settings_provider.dart';
 
-class SettingsPage extends StatefulWidget {
-  final bool isDark;
-  final VoidCallback onDarkToggle;
-  final VoidCallback onLanguageToggle;
-  final bool notificationsEnabled;
-  final VoidCallback onNotificationToggle;
-  const SettingsPage({super.key, required this.isDark, required this.onDarkToggle, required this.onLanguageToggle, required this.notificationsEnabled, required this.onNotificationToggle});
+class SettingsPage extends ConsumerStatefulWidget {
+  const SettingsPage({super.key});
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsPageState extends ConsumerState<SettingsPage> {
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider);
+
     return Scaffold(
       body: Column(
         children: [
@@ -38,13 +37,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                        child: Icon(widget.isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded, color: AppTheme.primary, size: 20),
+                        child: Icon(settings.isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded, color: AppTheme.primary, size: 20),
                       ),
                       const SizedBox(width: 12),
                       Text(AppStrings.get('dark_mode'), style: const TextStyle(fontWeight: FontWeight.w600)),
                     ]),
-                    value: widget.isDark,
-                    onChanged: (_) => widget.onDarkToggle(),
+                    value: settings.isDark,
+                    onChanged: (_) => ref.read(settingsProvider.notifier).toggleDark(),
                     activeColor: AppTheme.primary,
                   ),
                   const Divider(height: 1, indent: 60, endIndent: 16),
@@ -63,7 +62,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                       child: Text(AppStrings.isTamil ? 'தமிழ்' : 'English', style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
                     ),
-                    onTap: () { widget.onLanguageToggle(); setState(() {}); },
+                    onTap: () { ref.read(settingsProvider.notifier).toggleLanguage(); setState(() {}); },
                   ),
                   const Divider(height: 1, indent: 60, endIndent: 16),
                   SwitchListTile(
@@ -76,8 +75,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       const SizedBox(width: 12),
                       Text(AppStrings.get('daily_reminder'), style: const TextStyle(fontWeight: FontWeight.w600)),
                     ]),
-                    value: widget.notificationsEnabled,
-                    onChanged: (_) { widget.onNotificationToggle(); setState(() {}); },
+                    value: settings.notificationsEnabled,
+                    onChanged: (_) { ref.read(settingsProvider.notifier).toggleNotifications(); setState(() {}); },
                     activeColor: Colors.green,
                   ),
                 ]),

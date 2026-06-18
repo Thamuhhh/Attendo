@@ -3,3 +3,4 @@ data/
 *.db
 npm-debug.log
 .env
+flutter_app/android/key.properties

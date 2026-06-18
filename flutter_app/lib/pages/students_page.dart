@@ -83,7 +83,7 @@ class _StudentsPageState extends State<StudentsPage> {
                 onPressed: () async {
                   if (nameCtrl.text.trim().isEmpty) return;
                   try {
-                    if (isEdit) { await ApiService.updateStudent(student!.id, nameCtrl.text.trim(), phoneCtrl.text.trim()); }
+                    if (isEdit) { await ApiService.updateStudent(student.id, nameCtrl.text.trim(), phoneCtrl.text.trim()); }
                     else { await ApiService.addStudent(nameCtrl.text.trim(), phoneCtrl.text.trim()); }
                     if (ctx.mounted) Navigator.pop(ctx);
                     _load();

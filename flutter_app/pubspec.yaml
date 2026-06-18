@@ -41,6 +41,7 @@ dependencies:
   pdf: ^3.11.1
   path_provider: ^2.1.5
   open_file: ^3.5.10
+  flutter_riverpod: ^2.4.0
 
 dev_dependencies:
   flutter_test:

@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
-import '../services/auth_service.dart';
-import '../main_shell.dart';
+import '../providers/auth_provider.dart';
 import 'register_page.dart';
 
-class LoginPage extends StatefulWidget {
-  final bool isDark;
-  final VoidCallback onDarkToggle;
-  final VoidCallback onLanguageToggle;
-  final bool notificationsEnabled;
-  final VoidCallback onNotificationToggle;
-  const LoginPage({super.key, required this.isDark, required this.onDarkToggle, required this.onLanguageToggle, required this.notificationsEnabled, required this.onNotificationToggle});
+class LoginPage extends ConsumerStatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
@@ -30,14 +25,8 @@ class _LoginPageState extends State<LoginPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      await AuthService.login(_emailCtrl.text.trim(), _passCtrl.text);
-      if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => MainShell(
-        isDark: widget.isDark,
-        onDarkToggle: widget.onDarkToggle,
-        onLanguageToggle: widget.onLanguageToggle,
-        notificationsEnabled: widget.notificationsEnabled,
-        onNotificationToggle: widget.onNotificationToggle,
-      )));
+      await ref.read(authProvider.notifier).login(_emailCtrl.text.trim(), _passCtrl.text);
+      if (mounted) Navigator.popUntil(context, (route) => route.isFirst);
     } catch (e) {
       if (mounted) { AppTheme.showSnack(context, e.toString().replaceFirst('Exception: ', ''), isError: true); setState(() => _loading = false); }
     }
@@ -115,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 const Text("Don't have an account? ", style: TextStyle(color: AppTheme.textSecondary)),
                 GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RegisterPage(isDark: widget.isDark, onDarkToggle: widget.onDarkToggle, onLanguageToggle: widget.onLanguageToggle, notificationsEnabled: widget.notificationsEnabled, onNotificationToggle: widget.onNotificationToggle))),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage())),
                   child: const Text('Register', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w700)),
                 ),
               ]),
