@@ -15,28 +15,24 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     defaultConfig {
         applicationId = "com.tuition.attendance_app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = (System.getenv("BUILD_NUMBER") ?: flutter.versionCode.toString()).toInt()
-        versionName = (System.getenv("BUILD_NAME") ?: flutter.versionName) ?: "1.0.0"
+        versionName = System.getenv("BUILD_NAME") ?: flutter.versionName
     }
 
     signingConfigs {
         create("release") {
             val keyPropsFile = rootProject.file("key.properties")
             if (keyPropsFile.exists()) {
-                val keyProps = java.util.Properties()
+                val keyProps = Properties()
                 keyProps.load(keyPropsFile.inputStream())
-                storeFile = rootProject.file(keyProps["storeFile"] as String)
-                storePassword = keyProps["storePassword"] as String
-                keyAlias = keyProps["keyAlias"] as String
-                keyPassword = keyProps["keyPassword"] as String
+                storeFile = rootProject.file(keyProps.getProperty("storeFile"))
+                storePassword = keyProps.getProperty("storePassword")
+                keyAlias = keyProps.getProperty("keyAlias")
+                keyPassword = keyProps.getProperty("keyPassword")
             }
         }
     }
