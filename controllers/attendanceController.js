@@ -23,7 +23,13 @@ exports.getByDate = async (req, res) => {
       extra.date = { $gte: start, $lte: end };
     }
 
-    const records = await Attendance.find(instFilter(req, extra)).sort({ date: -1 }).lean();
+    const hasExtra = Object.keys(extra).length > 0;
+    const records = await Attendance.find({
+      $or: [
+        instFilter(req, extra),
+        { $and: [extra, { institutionId: { $exists: false } }] },
+      ]
+    }).sort({ date: -1 }).lean();
     const studentIds = [...new Set(records.map(r => r.studentId))];
     const students = studentIds.length > 0
       ? await Student.find(instFilter(req, { _id: { $in: studentIds } })).lean()
@@ -90,8 +96,19 @@ exports.save = async (req, res) => {
 exports.today = async (req, res) => {
   try {
     const today = todayStr();
-    const students = await Student.find(instFilter(req)).sort({ name: 1 }).lean();
-    const attendance = await Attendance.find(instFilter(req, { date: today })).lean();
+    const instId = req.institution._id.toString();
+    const students = await Student.find({
+      $or: [
+        instFilter(req),
+        { institutionId: { $exists: false } },
+      ]
+    }).sort({ name: 1 }).lean();
+    const attendance = await Attendance.find({
+      $or: [
+        instFilter(req, { date: today }),
+        { date: today, institutionId: { $exists: false } },
+      ]
+    }).lean();
 
     const attMap = {};
     attendance.forEach(a => { attMap[a.studentId] = a.status; });
@@ -117,7 +134,12 @@ exports.history = async (req, res) => {
       const { start, end } = getMonthRange(parseInt(year), parseInt(month));
       extra.date = { $gte: start, $lte: end };
     }
-    const records = await Attendance.find(instFilter(req, extra)).sort({ date: -1 }).lean();
+    const records = await Attendance.find({
+      $or: [
+        instFilter(req, extra),
+        { $and: [extra, { institutionId: { $exists: false } }] },
+      ]
+    }).sort({ date: -1 }).lean();
     res.json(records);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -132,7 +154,12 @@ exports.weekly = async (req, res) => {
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
       const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-      const records = await Attendance.find(instFilter(req, { date: dateStr })).lean();
+      const records = await Attendance.find({
+        $or: [
+          instFilter(req, { date: dateStr }),
+          { date: dateStr, institutionId: { $exists: false } },
+        ]
+      }).lean();
       const present = records.filter(r => r.status === 'present').length;
       const absent = records.filter(r => r.status === 'absent').length;
       days.push({ date: dateStr, day: dayName, present, absent, total: present + absent });

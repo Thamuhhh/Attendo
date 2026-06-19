@@ -8,18 +8,18 @@ class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
+  DashboardPageState createState() => DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class DashboardPageState extends State<DashboardPage> {
   TodayAttendance? _today;
   int _totalStudents = 0;
   bool _loading = true;
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() { super.initState(); load(); }
 
-  Future<void> _load() async {
+  Future<void> load() async {
     setState(() => _loading = true);
     try {
       final results = await Future.wait([ApiService.getTodayAttendance(), ApiService.getStudents()]);
@@ -48,7 +48,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
     return BackgroundDecoration(
       child: RefreshIndicator(
-        color: AppTheme.primary, onRefresh: _load,
+        color: AppTheme.primary, onRefresh: load,
         child: ListView(padding: const EdgeInsets.fromLTRB(24, 32, 24, 32), children: [
           Text(_greeting, style: const TextStyle(fontSize: 15, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
           const SizedBox(height: 4),

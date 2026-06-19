@@ -16,7 +16,12 @@ const updateSchema = Joi.object({
 
 exports.list = async (req, res) => {
   try {
-    const students = await Student.find(instFilter(req)).sort({ name: 1 }).lean();
+    const students = await Student.find({
+      $or: [
+        instFilter(req),
+        { institutionId: { $exists: false } },
+      ]
+    }).sort({ name: 1 }).lean();
     res.json(students);
   } catch (err) {
     res.status(500).json({ error: err.message });

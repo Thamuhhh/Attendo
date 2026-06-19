@@ -23,14 +23,21 @@ class MainShell extends ConsumerStatefulWidget {
 class _ShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
   late final PageController _pageCtrl;
+  final _dashboardKey = GlobalKey<DashboardPageState>();
 
-  final _pages = const [
-    DashboardPage(),
-    StudentsPage(),
-    AttendancePage(),
-    FeesPage(),
-    ReportPage(),
-  ];
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      DashboardPage(key: _dashboardKey),
+      const StudentsPage(),
+      const AttendancePage(),
+      const FeesPage(),
+      const ReportPage(),
+    ];
+  }
 
   final _titles = ['Dashboard', 'Students', 'Attendance', 'Fees', 'Report'];
 
@@ -204,7 +211,10 @@ class _ShellState extends ConsumerState<MainShell> {
               child: PageView(
                 controller: _pageCtrl,
                 physics: const BouncingScrollPhysics(),
-                onPageChanged: (i) => setState(() => _currentIndex = i),
+                onPageChanged: (i) {
+                  setState(() => _currentIndex = i);
+                  if (i == 0) _dashboardKey.currentState?.load();
+                },
                 children: _pages.map((p) => RepaintBoundary(child: p)).toList(),
               ),
             ),
