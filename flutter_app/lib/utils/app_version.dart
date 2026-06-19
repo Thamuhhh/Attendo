@@ -1,5 +1,5 @@
 class AppVersion {
-  static const String current = '1.0.0';
+  static const String current = '1.0.1';
   static const int buildNumber = 1;
 
   static bool isNewer(String remote) {
