@@ -4,3 +4,5 @@ data/
 npm-debug.log
 .env
 flutter_app/android/key.properties
+keystore_base64.txt
+keystore_pem.txt
