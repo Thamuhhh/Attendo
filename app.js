@@ -70,4 +70,11 @@ app.get('/api', (req, res) => {
   res.json({ message: 'Attendo API is running' });
 });
 
+app.get('/api/app/version', (req, res) => {
+  res.json({
+    version: '1.0.0',
+    apkUrl: 'https://github.com/Thamuhhh/Attendo/releases/download/v1.0.0/app-release.apk',
+  });
+});
+
 module.exports = app;

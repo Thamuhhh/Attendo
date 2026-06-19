@@ -212,6 +212,14 @@ class ApiService {
     final body = await _fetchRawWithFallback('att_history_$studentId', url);
     return (jsonDecode(body) as List).cast<Map<String, dynamic>>();
   }
+
+  static Future<Map<String, dynamic>> getAppVersion() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/app/version'),
+    ).timeout(const Duration(seconds: 10));
+    if (res.statusCode == 200) return jsonDecode(res.body);
+    throw Exception('Failed to get app version');
+  }
 }
 
 class _CacheEntry {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'theme.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
@@ -8,6 +9,7 @@ import 'pages/onboarding_page.dart';
 import 'main_shell.dart';
 import 'providers/settings_provider.dart';
 import 'providers/auth_provider.dart';
+import 'utils/app_version.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +44,55 @@ class _MyAppState extends ConsumerState<MyApp> {
     }
     setState(() => _initialized = true);
     NotificationService().scheduleDailyReminder();
+
+    _checkUpdate();
+  }
+
+  Future<void> _checkUpdate() async {
+    try {
+      final data = await ApiService.getAppVersion();
+      final remoteVer = data['version'] as String? ?? '1.0.0';
+      final apkUrl = data['apkUrl'] as String? ?? '';
+      if (!AppVersion.isNewer(remoteVer) || apkUrl.isEmpty) return;
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: Row(children: [
+            const Icon(Icons.system_update_rounded, color: AppTheme.primary),
+            const SizedBox(width: 10),
+            const Text('Update Available'),
+          ]),
+          content: Text('Version $remoteVer is available. You have ${AppVersion.current}.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Later'),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.download_rounded, size: 18),
+              label: const Text('Update'),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await _downloadAndInstall(apkUrl);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+    } catch (_) {}
+  }
+
+  Future<void> _downloadAndInstall(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   @override
