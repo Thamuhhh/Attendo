@@ -16,14 +16,12 @@ exports.getByDate = async (req, res) => {
   try {
     const { date, studentId, year, month } = req.query;
     let extra = {};
-    if (date) extra.date = date;
+    if (date) extra.date = date.slice(0, 10);
     if (studentId) extra.studentId = studentId;
     if (year && month) {
       const { start, end } = getMonthRange(parseInt(year), parseInt(month));
       extra.date = { $gte: start, $lte: end };
     }
-
-    const hasExtra = Object.keys(extra).length > 0;
     const records = await Attendance.find({
       $or: [
         instFilter(req, extra),
@@ -48,7 +46,7 @@ exports.save = async (req, res) => {
     const { error, value } = saveSchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details[0].message });
 
-    const attDate = value.date || todayStr();
+    const attDate = (value.date || todayStr()).slice(0, 10);
     const instId = req.institution._id.toString();
     const studentIds = value.records.map(r => r.studentId);
 
