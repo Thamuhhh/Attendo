@@ -30,6 +30,7 @@ class _ShellState extends ConsumerState<MainShell> {
   @override
   void initState() {
     super.initState();
+    _pageCtrl = PageController();
     _pages = [
       DashboardPage(key: _dashboardKey),
       const StudentsPage(),
@@ -48,9 +49,6 @@ class _ShellState extends ConsumerState<MainShell> {
     Icons.payments_outlined,
     Icons.bar_chart_outlined,
   ];
-
-  @override
-  void initState() { super.initState(); _pageCtrl = PageController(); }
 
   @override
   void dispose() { ApiService.stopKeepAlive(); _pageCtrl.dispose(); super.dispose(); }
