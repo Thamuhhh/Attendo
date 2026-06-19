@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
 import '../l10n/strings.dart';
 import '../providers/settings_provider.dart';
+import '../services/api_service.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -83,7 +84,42 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
             ]),
           ),
-
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4))],
+            ),
+            child: ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: AppTheme.warning.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.cloud_download_rounded, color: AppTheme.warning, size: 20),
+              ),
+              title: Text(AppStrings.get('claim_old_data'), style: const TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: const Text('Migrate pre-existing data to your account', style: TextStyle(fontSize: 12)),
+              trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+              onTap: () async {
+                final confirmed = await AppTheme.showConfirm(
+                  context,
+                  AppStrings.get('claim_old_data'),
+                  'This will assign all unowned data to your institution. Continue?',
+                );
+                if (!confirmed) return;
+                try {
+                  final result = await ApiService.claimOldData();
+                  if (context.mounted) {
+                    AppTheme.showSnack(context, 'Claimed: ${result['migrated'] ?? 'OK'}');
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    AppTheme.showSnack(context, 'Failed: $e', isError: true);
+                  }
+                }
+              },
+            ),
+          ),
         ],
       ),
     );

@@ -47,6 +47,7 @@ class AppStrings {
     'language': 'Language',
     'profile': 'Profile',
     'daily_reminder': 'Daily Reminder',
+    'claim_old_data': 'Claim Old Data',
   };
 
   static const _ta = {
@@ -95,6 +96,7 @@ class AppStrings {
     'language': 'மொழி',
     'profile': 'சுயவிவரம்',
     'daily_reminder': 'தினசரி நினைவூட்டல்',
+    'claim_old_data': 'பழைய தரவை உரிமை கோருங்கள்',
   };
 
   static Map<String, String> _current = _en;

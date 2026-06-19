@@ -46,9 +46,12 @@ exports.save = async (req, res) => {
     const instId = req.institution._id.toString();
     const studentIds = value.records.map(r => r.studentId);
 
-    const owned = await Student.countDocuments(
-      instFilter(req, { _id: { $in: studentIds } })
-    );
+    const owned = await Student.countDocuments({
+      $or: [
+        instFilter(req, { _id: { $in: studentIds } }),
+        { _id: { $in: studentIds }, institutionId: { $exists: false } },
+      ]
+    });
     if (owned !== [...new Set(studentIds)].length) {
       return res.status(403).json({ error: 'Some students do not belong to your institution' });
     }
