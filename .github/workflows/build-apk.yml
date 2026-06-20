@@ -27,30 +27,17 @@ jobs:
 
       - run: flutter pub get
 
-      - name: Create keystore and key.properties for CI
-        run: |
-          keytool -genkey -v -keystore android/app/keystore.jks \
-            -storepass attendopass -keypass attendopass \
-            -alias attendokey -keyalg RSA -keysize 2048 \
-            -validity 10000 -dname "CN=Attendo,OU=Dev,O=Attendo,L=City,S=State,C=IN"
-          cat > android/key.properties << EOF
-          storePassword=attendopass
-          keyPassword=attendopass
-          keyAlias=attendokey
-          storeFile=app/keystore.jks
-          EOF
-
       - name: Auto-increment version
         run: |
           COMMIT_COUNT=$(git rev-list --count HEAD)
           echo "BUILD_NUMBER=$COMMIT_COUNT" >> $GITHUB_ENV
           echo "BUILD_NAME=1.0.$COMMIT_COUNT" >> $GITHUB_ENV
 
-      - run: flutter build apk --release
+      - run: flutter build apk --debug
 
       - name: Rename APK
         run: |
-          mv build/app/outputs/flutter-apk/app-release.apk "build/app/outputs/flutter-apk/attendo-v$BUILD_NAME.apk"
+          mv build/app/outputs/flutter-apk/app-debug.apk "build/app/outputs/flutter-apk/attendo-v$BUILD_NAME.apk"
 
       - uses: actions/upload-artifact@v4
         with:
