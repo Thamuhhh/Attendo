@@ -20,10 +20,19 @@ jobs:
           flutter-version: '3.44.x'
           channel: 'stable'
 
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - run: flutter pub get
 
-      - name: Create key.properties for CI
+      - name: Create keystore and key.properties for CI
         run: |
+          keytool -genkey -v -keystore android/app/keystore.jks \
+            -storepass attendopass -keypass attendopass \
+            -alias attendokey -keyalg RSA -keysize 2048 \
+            -validity 10000 -dname "CN=Attendo,OU=Dev,O=Attendo,L=City,S=State,C=IN"
           cat > android/key.properties << EOF
           storePassword=attendopass
           keyPassword=attendopass
