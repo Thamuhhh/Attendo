@@ -28,7 +28,7 @@ jobs:
           storePassword=attendopass
           keyPassword=attendopass
           keyAlias=attendokey
-          storeFile=keystore.jks
+          storeFile=app/keystore.jks
           EOF
 
       - name: Auto-increment version
