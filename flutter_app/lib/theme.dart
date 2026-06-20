@@ -1,16 +1,47 @@
 import 'package:flutter/material.dart';
+import 'l10n/strings.dart';
 
 class AppTheme {
   static const Color primary = Color(0xFF1A237E);
   static const Color primaryLight = Color(0xFF534BAE);
   static const Color accent = Color(0xFF00BFA5);
   static const Color surface = Color(0xFFF0F2F5);
+  static const Color surfaceDark = Color(0xFF0D0D1A);
   static const Color cardBg = Colors.white;
+  static const Color cardBgDark = Color(0xFF1A1A2E);
   static const Color textPrimary = Color(0xFF1A1A2E);
   static const Color textSecondary = Color(0xFF6B7280);
   static const Color success = Color(0xFF10B981);
   static const Color danger = Color(0xFFEF4444);
   static const Color warning = Color(0xFFF59E0B);
+
+  static bool isDark(BuildContext context) => Theme.of(context).brightness == Brightness.dark;
+  static Color cardColor(BuildContext context) => isDark(context) ? cardBgDark : cardBg;
+  static Color scaffoldColor(BuildContext context) => isDark(context) ? surfaceDark : surface;
+  static Color greyShade(BuildContext context, int shade) {
+    if (!isDark(context)) {
+      switch (shade) {
+        case 50: return Colors.grey.shade50;
+        case 100: return Colors.grey.shade100;
+        case 200: return Colors.grey.shade200;
+        case 300: return Colors.grey.shade300;
+        case 400: return Colors.grey.shade400;
+        case 500: return Colors.grey.shade500;
+        case 600: return Colors.grey.shade600;
+        default: return Colors.grey;
+      }
+    }
+    switch (shade) {
+      case 50: return const Color(0xFF2A2A3E);
+      case 100: return const Color(0xFF2A2A3E);
+      case 200: return const Color(0xFF3A3A4E);
+      case 300: return const Color(0xFF4A4A5E);
+      case 400: return const Color(0xFF6B6B7E);
+      case 500: return const Color(0xFF8B8B9E);
+      case 600: return const Color(0xFF9B9BAE);
+      default: return const Color(0xFF3A3A4E);
+    }
+  }
 
   static ThemeData get lightTheme {
     return _baseTheme(
@@ -23,8 +54,8 @@ class AppTheme {
 
   static ThemeData get darkTheme {
     return _baseTheme(
-      const Color(0xFF0D0D1A),
-      const Color(0xFF1A1A2E),
+      surfaceDark,
+      cardBgDark,
       const Color(0xFF2A2A3E),
       const Color(0xFF3A3A4E),
     );
@@ -104,22 +135,35 @@ class AppTheme {
         elevation: 4,
         shape: CircleBorder(),
       ),
+      dividerTheme: DividerThemeData(color: Colors.grey.shade200),
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      ),
     );
   }
 
-  static PreferredSizeWidget gradientAppBar(String title, {List<Widget>? actions, Widget? leading}) {
+  static PreferredSizeWidget gradientAppBar(String title, {List<Widget>? actions, Widget? leading, BuildContext? context}) {
     return PreferredSize(
       preferredSize: const Size.fromHeight(64),
       child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
             colors: [primary, primaryLight],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
           boxShadow: [
-            BoxShadow(color: Color(0x29000000), blurRadius: 16, offset: Offset(0, 6)),
+            BoxShadow(
+              color: context != null && isDark(context)
+                  ? Colors.black.withValues(alpha: 0.4)
+                  : const Color(0x29000000),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
           ],
         ),
         child: AppBar(
@@ -132,27 +176,31 @@ class AppTheme {
     );
   }
 
-  static BoxDecoration statCard(Color color) {
+  static BoxDecoration statCard(BuildContext context, Color color) {
+    final d = isDark(context);
     return BoxDecoration(
       gradient: LinearGradient(
-        colors: [color.withValues(alpha: 0.12), color.withValues(alpha: 0.04)],
+        colors: [
+          color.withValues(alpha: d ? 0.2 : 0.12),
+          color.withValues(alpha: d ? 0.08 : 0.04),
+        ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
       borderRadius: BorderRadius.circular(18),
-      border: Border.all(color: color.withValues(alpha: 0.15), width: 1.5),
+      border: Border.all(color: color.withValues(alpha: d ? 0.3 : 0.15), width: 1.5),
     );
   }
 
-  static Widget statusBadge(String status) {
+  static Widget statusBadge(BuildContext context, String status) {
     final isPresent = status == 'present';
     final color = isPresent ? success : danger;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: color.withValues(alpha: isDark(context) ? 0.25 : 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withValues(alpha: isDark(context) ? 0.5 : 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -160,7 +208,7 @@ class AppTheme {
           Icon(isPresent ? Icons.check_circle_rounded : Icons.cancel_rounded, size: 16, color: color),
           const SizedBox(width: 5),
           Text(
-            isPresent ? 'Present' : 'Absent',
+            isPresent ? AppStrings.get('present') : AppStrings.get('absent'),
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color),
           ),
         ],
@@ -168,14 +216,14 @@ class AppTheme {
     );
   }
 
-  static Widget percentBadge(int percent) {
+  static Widget percentBadge(BuildContext context, int percent) {
     final color = percent >= 75 ? success : (percent >= 50 ? warning : danger);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: color.withValues(alpha: isDark(context) ? 0.25 : 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withValues(alpha: isDark(context) ? 0.5 : 0.3)),
       ),
       child: Text(
         '$percent%',
@@ -224,28 +272,30 @@ class AppTheme {
   }
 
   static Future<bool> showConfirm(BuildContext context, String title, String message, {String confirmLabel = 'Delete', bool isDestructive = true}) async {
+    final d = isDark(context);
     return await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: cardColor(context),
         title: Row(children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: (isDestructive ? danger : primary).withValues(alpha: 0.1),
+              color: (isDestructive ? danger : primary).withValues(alpha: d ? 0.3 : 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(isDestructive ? Icons.delete_outline_rounded : Icons.info_outline_rounded,
                 color: isDestructive ? danger : primary, size: 22),
           ),
           const SizedBox(width: 12),
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: d ? Colors.white : textPrimary)),
         ]),
-        content: Text(message, style: const TextStyle(fontSize: 14, color: textSecondary, height: 1.4)),
+        content: Text(message, style: TextStyle(fontSize: 14, color: d ? Colors.grey.shade300 : textSecondary, height: 1.4)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade600)),
+            child: Text(AppStrings.get('cancel'), style: TextStyle(fontWeight: FontWeight.w600, color: d ? Colors.grey.shade400 : Colors.grey.shade600)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -283,23 +333,25 @@ class _ShimmerCardState extends State<ShimmerCard> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final d = AppTheme.isDark(context);
     return FadeTransition(
       opacity: _ctrl.drive(CurveTween(curve: _PulseCurve())),
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        color: AppTheme.cardColor(context),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              _shimmerBox(48, 24),
+              _shimmerBox(48, 24, d),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _shimmerBox(140, 14),
+                    _shimmerBox(140, 14, d),
                     const SizedBox(height: 8),
-                    _shimmerBox(80, 12),
+                    _shimmerBox(80, 12, d),
                   ],
                 ),
               ),
@@ -310,11 +362,11 @@ class _ShimmerCardState extends State<ShimmerCard> with SingleTickerProviderStat
     );
   }
 
-  Widget _shimmerBox(double w, double h) {
+  Widget _shimmerBox(double w, double h, bool d) {
     return Container(
       width: w, height: h,
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: d ? const Color(0xFF3A3A4E) : Colors.grey.shade200,
         borderRadius: BorderRadius.circular(h / 2),
       ),
     );
@@ -327,5 +379,3 @@ class _PulseCurve extends Curve {
     return 0.3 + 0.7 * (1 - (t * 2 - 1) * (t * 2 - 1));
   }
 }
-
-

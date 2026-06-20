@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import '../l10n/strings.dart';
 import '../services/api_service.dart';
 import '../widgets/widgets.dart';
 import '../models/attendance_record.dart';
@@ -25,15 +26,15 @@ class DashboardPageState extends State<DashboardPage> {
       final results = await Future.wait([ApiService.getTodayAttendance(), ApiService.getStudents()]);
       if (mounted) setState(() { _today = results[0] as TodayAttendance; _totalStudents = (results[1] as List).length; _loading = false; });
     } catch (e) {
-      if (mounted) { setState(() => _loading = false); AppTheme.showSnack(context, 'Failed to load dashboard', isError: true); }
+      if (mounted) { setState(() => _loading = false); AppTheme.showSnack(context, AppStrings.get('failed_to_load'), isError: true); }
     }
   }
 
   String get _greeting {
     final h = DateTime.now().hour;
-    if (h < 12) return 'Good Morning';
-    if (h < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    if (h < 12) return AppStrings.get('good_morning');
+    if (h < 17) return AppStrings.get('good_afternoon');
+    return AppStrings.get('good_evening');
   }
 
   String get _dateStr {
@@ -59,7 +60,7 @@ class DashboardPageState extends State<DashboardPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Attendance', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: AppTheme.textPrimary, letterSpacing: -1)),
+                    Text(AppStrings.get('attendance'), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: AppTheme.textPrimary, letterSpacing: -1)),
                     const SizedBox(height: 8),
                     Row(children: [
                       Icon(Icons.calendar_today_rounded, size: 14, color: Colors.grey.shade400),
@@ -73,14 +74,14 @@ class DashboardPageState extends State<DashboardPage> {
             ],
           ),
           const SizedBox(height: 32),
-          _buildStatCard(Icons.people_rounded, _totalStudents, 'Total Students', AppTheme.primary),
+          _buildStatCard(Icons.people_rounded, _totalStudents, AppStrings.get('total_students'), AppTheme.primary),
           const SizedBox(height: 12),
-          _buildStatCard(Icons.check_circle_rounded, present, 'Present Today', AppTheme.success),
+          _buildStatCard(Icons.check_circle_rounded, present, AppStrings.get('present_today'), AppTheme.success),
           if (!_loading && _today != null) ...[
             const SizedBox(height: 32),
-            const Text("Today's Attendance", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+            Text(AppStrings.get('todays_attendance'), style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
             const SizedBox(height: 4),
-            Text('${_today!.records.length} students • ${absent} absent', style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
+            Text(AppStrings.get('students_count').replaceAll('{count}', '${_today!.records.length}'), style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
             const SizedBox(height: 14),
             if (_today!.records.isEmpty)
               Container(
@@ -89,7 +90,7 @@ class DashboardPageState extends State<DashboardPage> {
                 child: Column(children: [
                   Icon(Icons.event_busy_rounded, size: 48, color: Colors.grey.shade300),
                   const SizedBox(height: 12),
-                  const Text('No attendance marked today', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
+                  Text(AppStrings.get('no_attendance_today'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
                 ]),
               )
             else
@@ -97,9 +98,9 @@ class DashboardPageState extends State<DashboardPage> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppTheme.cardColor(context),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.grey.shade100),
+                  border: Border.all(color: AppTheme.greyShade(context, 100)),
                 ),
                 child: Row(children: [
                   GradientAvatar(name: r.studentName, size: 40, fontSize: 15),
@@ -111,7 +112,7 @@ class DashboardPageState extends State<DashboardPage> {
                       color: r.status == 'present' ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.danger.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(r.status == 'present' ? 'Present' : 'Absent', style: TextStyle(fontSize: 12, color: r.status == 'present' ? AppTheme.success : AppTheme.danger, fontWeight: FontWeight.w700)),
+                    child: Text(r.status == 'present' ? AppStrings.get('present') : AppStrings.get('absent'), style: TextStyle(fontSize: 12, color: r.status == 'present' ? AppTheme.success : AppTheme.danger, fontWeight: FontWeight.w700)),
                   ),
                 ]),
               )),
@@ -128,12 +129,13 @@ class DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildStatCard(IconData icon, int value, String label, Color color) {
+    final d = AppTheme.isDark(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.cardColor(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: AppTheme.greyShade(context, 100)),
       ),
       child: Row(children: [
         Container(

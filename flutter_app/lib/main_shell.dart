@@ -40,7 +40,13 @@ class _ShellState extends ConsumerState<MainShell> {
     ];
   }
 
-  final _titles = ['Dashboard', 'Students', 'Attendance', 'Fees', 'Report'];
+  List<String> get _titles => [
+    AppStrings.get('dashboard'),
+    AppStrings.get('students'),
+    AppStrings.get('attendance'),
+    AppStrings.get('fees'),
+    AppStrings.get('report'),
+  ];
 
   final _outlinedIcons = const [
     Icons.dashboard_outlined,
@@ -64,18 +70,21 @@ class _ShellState extends ConsumerState<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final d = AppTheme.isDark(context);
+    final titles = _titles;
+
     return Scaffold(
       extendBody: true,
       drawer: Drawer(
         child: Container(
-          color: Colors.white,
+          color: AppTheme.cardColor(context),
           child: SafeArea(
             child: Column(
               children: [
                 Container(
                   padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
                   decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+                    border: Border(bottom: BorderSide(color: AppTheme.greyShade(context, 200))),
                   ),
                   child: Row(
                     children: [
@@ -101,14 +110,14 @@ class _ShellState extends ConsumerState<MainShell> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              AuthService.institutionName ?? 'My Institution',
-                              style: const TextStyle(fontSize: 17, color: AppTheme.textPrimary, fontWeight: FontWeight.w700),
+                              AuthService.institutionName ?? AppStrings.get('my_institution'),
+                              style: TextStyle(fontSize: 17, color: d ? Colors.white : AppTheme.textPrimary, fontWeight: FontWeight.w700),
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 3),
                             Text(
                               AuthService.institutionEmail ?? '',
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                              style: TextStyle(fontSize: 12, color: AppTheme.greyShade(context, 500)),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
@@ -120,31 +129,31 @@ class _ShellState extends ConsumerState<MainShell> {
                 const SizedBox(height: 8),
                 _DrawerItem(
                   icon: Icons.dashboard_rounded,
-                  label: 'Dashboard',
+                  label: titles[0],
                   isSelected: _currentIndex == 0,
                   onTap: () { Navigator.pop(context); _pageCtrl.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic); setState(() => _currentIndex = 0); },
                 ),
                 _DrawerItem(
                   icon: Icons.people_rounded,
-                  label: 'Students',
+                  label: titles[1],
                   isSelected: _currentIndex == 1,
                   onTap: () { Navigator.pop(context); _pageCtrl.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic); setState(() => _currentIndex = 1); },
                 ),
                 _DrawerItem(
                   icon: Icons.checklist_rounded,
-                  label: 'Attendance',
+                  label: titles[2],
                   isSelected: _currentIndex == 2,
                   onTap: () { Navigator.pop(context); _pageCtrl.animateToPage(2, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic); setState(() => _currentIndex = 2); },
                 ),
                 _DrawerItem(
                   icon: Icons.payments_rounded,
-                  label: 'Fees',
+                  label: titles[3],
                   isSelected: _currentIndex == 3,
                   onTap: () { Navigator.pop(context); _pageCtrl.animateToPage(3, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic); setState(() => _currentIndex = 3); },
                 ),
                 _DrawerItem(
                   icon: Icons.bar_chart_rounded,
-                  label: 'Report',
+                  label: titles[4],
                   isSelected: _currentIndex == 4,
                   onTap: () { Navigator.pop(context); _pageCtrl.animateToPage(4, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic); setState(() => _currentIndex = 4); },
                 ),
@@ -160,30 +169,31 @@ class _ShellState extends ConsumerState<MainShell> {
                   margin: const EdgeInsets.fromLTRB(12, 0, 12, 16),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(color: AppTheme.greyShade(context, 200)),
                   ),
                   child: ListTile(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     leading: Container(
                       width: 38, height: 38,
                       decoration: BoxDecoration(
-                        color: AppTheme.danger.withValues(alpha: 0.1),
+                        color: AppTheme.danger.withValues(alpha: d ? 0.3 : 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.logout_rounded, color: AppTheme.danger, size: 20),
                     ),
-                    title: const Text('Logout', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
+                    title: Text(AppStrings.get('logout'), style: TextStyle(color: d ? Colors.white : AppTheme.textPrimary, fontWeight: FontWeight.w600)),
                     onTap: () {
                       showDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          title: const Text('Logout'),
-                          content: const Text('Are you sure you want to logout?'),
+                          backgroundColor: AppTheme.cardColor(context),
+                          title: Text(AppStrings.get('logout'), style: TextStyle(color: d ? Colors.white : AppTheme.textPrimary)),
+                          content: Text(AppStrings.get('logout_confirm'), style: TextStyle(color: d ? Colors.grey.shade300 : AppTheme.textSecondary)),
                           actions: [
-                            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppStrings.get('cancel'), style: TextStyle(color: d ? Colors.grey.shade400 : Colors.grey.shade600))),
                             TextButton(
                               onPressed: () { Navigator.pop(ctx); _logout(); },
-                              child: const Text('Logout', style: TextStyle(color: AppTheme.danger, fontWeight: FontWeight.w700)),
+                              child: Text(AppStrings.get('logout'), style: const TextStyle(color: AppTheme.danger, fontWeight: FontWeight.w700)),
                             ),
                           ],
                         ),
@@ -198,7 +208,7 @@ class _ShellState extends ConsumerState<MainShell> {
       ),
       body: Column(
         children: [
-          AppTheme.gradientAppBar(_titles[_currentIndex], leading: Builder(
+          AppTheme.gradientAppBar(titles[_currentIndex], leading: Builder(
             builder: (ctx) => IconButton(
               icon: const Icon(Icons.menu_rounded, color: Colors.white),
               onPressed: () => Scaffold.of(ctx).openDrawer(),
@@ -227,13 +237,13 @@ class _ShellState extends ConsumerState<MainShell> {
         },
         elevation: 8,
         shadowColor: AppTheme.primary.withValues(alpha: 0.15),
-        backgroundColor: Colors.white,
+        backgroundColor: AppTheme.cardColor(context),
         indicatorColor: AppTheme.primary.withValues(alpha: 0.12),
         height: 68,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         animationDuration: const Duration(milliseconds: 250),
         destinations: List.generate(5, (i) => NavigationDestination(
-          icon: Icon(_outlinedIcons[i], color: Colors.grey.shade500),
+          icon: Icon(_outlinedIcons[i], color: AppTheme.greyShade(context, 500)),
           selectedIcon: Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
@@ -242,7 +252,7 @@ class _ShellState extends ConsumerState<MainShell> {
             ),
             child: const Icon(Icons.check, color: Colors.white, size: 14),
           ),
-          label: _titles[i],
+          label: titles[i],
         )),
       ),
     );
@@ -259,6 +269,7 @@ class _DrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final d = AppTheme.isDark(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: AnimatedContainer(
@@ -283,7 +294,7 @@ class _DrawerItem extends StatelessWidget {
                   Container(
                     width: 38, height: 38,
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.white.withValues(alpha: 0.2) : AppTheme.primary.withValues(alpha: 0.06),
+                      color: isSelected ? Colors.white.withValues(alpha: 0.2) : AppTheme.primary.withValues(alpha: d ? 0.3 : 0.06),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(icon, size: 20, color: isSelected ? Colors.white : AppTheme.primary),
@@ -294,7 +305,7 @@ class _DrawerItem extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected ? Colors.white : AppTheme.textPrimary,
+                      color: isSelected ? Colors.white : (d ? Colors.grey.shade200 : AppTheme.textPrimary),
                     ),
                   ),
                   const Spacer(),

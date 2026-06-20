@@ -211,7 +211,7 @@ class _FeesPageState extends State<FeesPage> {
                   style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
             ],
           )),
-          AppTheme.percentBadge(pct),
+          AppTheme.percentBadge(context, pct),
         ]),
         const SizedBox(height: 12),
           Wrap(

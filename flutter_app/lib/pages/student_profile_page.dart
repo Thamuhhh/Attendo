@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import '../l10n/strings.dart';
 import '../services/api_service.dart';
 import '../models/student.dart';
 import '../widgets/widgets.dart';
@@ -108,7 +109,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                       Row(children: [
                         Icon(Icons.phone_rounded, size: 14, color: Colors.grey.shade400),
                         const SizedBox(width: 6),
-                        Text(widget.student.phone.isEmpty ? 'No phone' : widget.student.phone, style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                        Text(widget.student.phone.isEmpty ? AppStrings.get('no_phone') : widget.student.phone, style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
                       ]),
                     ],
                   )),
@@ -132,7 +133,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                       child: const Icon(Icons.payments_rounded, color: AppTheme.primary, size: 18),
                     ),
                     const SizedBox(width: 10),
-                    const Text('Fees - This Year', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                    Text(AppStrings.get('fees'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
                   ]),
                   const SizedBox(height: 16),
                   if (_loadingFees)
@@ -224,11 +225,11 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
           const SizedBox(height: 16),
           // Legend
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            _legendDot(AppTheme.success, 'Present'),
+            _legendDot(AppTheme.success, AppStrings.get('present')),
             const SizedBox(width: 16),
-            _legendDot(AppTheme.danger, 'Absent'),
+            _legendDot(AppTheme.danger, AppStrings.get('absent')),
             const SizedBox(width: 16),
-            _legendDot(AppTheme.warning, 'Holiday'),
+            _legendDot(AppTheme.warning, AppStrings.get('holiday')),
           ]),
         ],
       ]),

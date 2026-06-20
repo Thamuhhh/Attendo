@@ -158,7 +158,7 @@ class CircularProgressWidget extends StatelessWidget {
               duration: const Duration(milliseconds: 1000),
               curve: Curves.easeOutCubic,
               builder: (ctx, v, _) => CustomPaint(
-                painter: _RingPainter(v, _color, strokeWidth),
+                painter: _RingPainter(v, _color, strokeWidth, context),
                 child: const SizedBox.expand(),
               ),
             ),
@@ -186,15 +186,16 @@ class _RingPainter extends CustomPainter {
   final double progress;
   final Color color;
   final double strokeWidth;
+  final BuildContext context;
 
-  _RingPainter(this.progress, this.color, this.strokeWidth);
+  _RingPainter(this.progress, this.color, this.strokeWidth, this.context);
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - strokeWidth) / 2;
     final paint = Paint()
-      ..color = Colors.grey.shade200
+      ..color = AppTheme.greyShade(context, 200)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
@@ -218,15 +219,16 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final d = AppTheme.isDark(context);
     return Container(
       margin: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.85),
+        color: d ? AppTheme.cardBgDark.withValues(alpha: 0.85) : Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+        border: Border.all(color: d ? Colors.white.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.5)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 6)),
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2)),
+          BoxShadow(color: Colors.black.withValues(alpha: d ? 0.2 : 0.04), blurRadius: 12, offset: const Offset(0, 6)),
+          BoxShadow(color: Colors.black.withValues(alpha: d ? 0.1 : 0.02), blurRadius: 4, offset: const Offset(0, 2)),
         ],
       ),
       child: ClipRRect(
