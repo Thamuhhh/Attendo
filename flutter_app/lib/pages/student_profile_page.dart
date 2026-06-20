@@ -17,6 +17,9 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
   List<Map<String, dynamic>> _attendanceHistory = [];
   final Map<int, String> _feesMap = {};
   bool _loadingFees = true;
+  Set<String> _holidays = {};
+  int _calendarYear = DateTime.now().year;
+  int _calendarMonth = DateTime.now().month;
 
   @override
   void initState() { super.initState(); _load(); }
@@ -27,13 +30,16 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
       final results = await Future.wait([
         ApiService.getAttendanceHistory(widget.student.id),
         ApiService.getFeeRecords(widget.student.id, DateTime.now().year),
+        ApiService.getHolidays(),
       ]);
       if (mounted) {
         final att = results[0] as List<Map<String, dynamic>>;
         final fees = results[1] as List;
+        final holidays = results[2] as List<String>;
         setState(() {
           _attendanceHistory = att;
           for (final f in fees) { _feesMap[f.month] = f.status; }
+          _holidays = holidays.toSet();
           _loading = false;
           _loadingFees = false;
         });
@@ -41,7 +47,35 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     } catch (_) { if (mounted) setState(() { _loading = false; _loadingFees = false; }); }
   }
 
+  String? _getStatus(String dateStr) {
+    if (_holidays.contains(dateStr)) return 'holiday';
+    for (final a in _attendanceHistory) {
+      if (a['date'] == dateStr) return a['status'];
+    }
+    return null;
+  }
+
   static const _months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  static const _dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  int _daysInMonth(int year, int month) => DateTime(year, month + 1, 0).day;
+  int _firstWeekday(int year, int month) => (DateTime(year, month, 1).weekday + 6) % 7;
+
+  void _prevMonth() {
+    if (_calendarMonth == 1) {
+      setState(() { _calendarMonth = 12; _calendarYear--; });
+    } else {
+      setState(() => _calendarMonth--);
+    }
+  }
+
+  void _nextMonth() {
+    if (_calendarMonth == 12) {
+      setState(() { _calendarMonth = 1; _calendarYear++; });
+    } else {
+      setState(() => _calendarMonth++);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,63 +159,170 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                 ]),
               ),
               const SizedBox(height: 20),
-              // Attendance history
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4))],
-                ),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: AppTheme.success.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                      child: const Icon(Icons.history_rounded, color: AppTheme.success, size: 18),
-                    ),
-                    const SizedBox(width: 10),
-                    const Text('Attendance History', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-                    const Spacer(),
-                    if (_attendanceHistory.isNotEmpty)
-                      Text('${_attendanceHistory.length} days', style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
-                  ]),
-                  const SizedBox(height: 16),
-                  if (_loading)
-                    const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(strokeWidth: 2)))
-                  else if (_attendanceHistory.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Center(child: Text('No attendance records', style: TextStyle(color: Colors.grey.shade400, fontSize: 13))),
-                    )
-                  else
-                    ...List.generate(_attendanceHistory.length.clamp(0, 50), (i) {
-                      final a = _attendanceHistory[i];
-                      final isPresent = a['status'] == 'present';
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Row(children: [
-                          Icon(isPresent ? Icons.check_circle_rounded : Icons.cancel_rounded, size: 16, color: isPresent ? AppTheme.success : AppTheme.danger),
-                          const SizedBox(width: 10),
-                          Text(a['date'] ?? '', style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary)),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: isPresent ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.danger.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(isPresent ? 'Present' : 'Absent', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: isPresent ? AppTheme.success : AppTheme.danger)),
-                          ),
-                        ]),
-                      );
-                    }),
-                ]),
-              ),
+              // Attendance Calendar
+              _buildCalendar(),
             ]),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildCalendar() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4))],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: AppTheme.success.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.calendar_month_rounded, color: AppTheme.success, size: 18),
+          ),
+          const SizedBox(width: 10),
+          const Text('Attendance History', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+          const Spacer(),
+          if (!_loading)
+            Text('${_attendanceHistory.length} days', style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
+        ]),
+        const SizedBox(height: 16),
+        if (_loading)
+          const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(strokeWidth: 2)))
+        else ...[
+          // Month navigation
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left_rounded),
+              onPressed: _prevMonth,
+              style: IconButton.styleFrom(backgroundColor: Colors.grey.shade100, shape: const CircleBorder()),
+            ),
+            Text('${_months[_calendarMonth - 1]} $_calendarYear',
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+            IconButton(
+              icon: const Icon(Icons.chevron_right_rounded),
+              onPressed: _nextMonth,
+              style: IconButton.styleFrom(backgroundColor: Colors.grey.shade100, shape: const CircleBorder()),
+            ),
+          ]),
+          const SizedBox(height: 12),
+          // Day headers
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: _dayNames.map((d) => SizedBox(
+              width: 32,
+              child: Text(d, textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.grey.shade500)),
+            )).toList(),
+          ),
+          const SizedBox(height: 6),
+          // Calendar grid
+          ..._buildWeeks(),
+          const SizedBox(height: 16),
+          // Legend
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            _legendDot(AppTheme.success, 'Present'),
+            const SizedBox(width: 16),
+            _legendDot(AppTheme.danger, 'Absent'),
+            const SizedBox(width: 16),
+            _legendDot(AppTheme.warning, 'Holiday'),
+          ]),
+        ],
+      ]),
+    );
+  }
+
+  Widget _legendDot(Color color, String label) {
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+      const SizedBox(width: 4),
+      Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+    ]);
+  }
+
+  List<Widget> _buildWeeks() {
+    final days = _daysInMonth(_calendarYear, _calendarMonth);
+    final start = _firstWeekday(_calendarYear, _calendarMonth);
+    final now = DateTime.now();
+    final isCurrentMonth = _calendarYear == now.year && _calendarMonth == now.month;
+    final today = now.day;
+
+    final List<Widget> weeks = [];
+    final dayStrings = <String>[];
+
+    for (int i = 0; i < start; i++) {
+      dayStrings.add('');
+    }
+    for (int d = 1; d <= days; d++) {
+      final y = _calendarYear;
+      final m = _calendarMonth.toString().padLeft(2, '0');
+      final day = d.toString().padLeft(2, '0');
+      dayStrings.add('$y-$m-$day');
+    }
+
+    for (int w = 0; w < dayStrings.length; w += 7) {
+      final weekDays = dayStrings.sublist(w, (w + 7 > dayStrings.length) ? dayStrings.length : w + 7);
+      weeks.add(Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: List.generate(7, (i) {
+            if (i >= weekDays.length || weekDays[i].isEmpty) {
+              return const SizedBox(width: 32, height: 32);
+            }
+            final dateStr = weekDays[i];
+            final dayNum = int.tryParse(dateStr.split('-').last) ?? 0;
+            final status = _getStatus(dateStr);
+            final isToday = isCurrentMonth && dayNum == today;
+
+            Color? dotColor;
+            if (status == 'present') dotColor = AppTheme.success;
+            else if (status == 'absent') dotColor = AppTheme.danger;
+            else if (status == 'holiday') dotColor = AppTheme.warning;
+
+            return SizedBox(
+              width: 34,
+              height: 34,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  if (isToday)
+                    Container(
+                      width: 30, height: 30,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.08),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('$dayNum',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
+                            color: isToday ? AppTheme.primary : AppTheme.textPrimary,
+                          )),
+                      if (dotColor != null)
+                        Container(
+                          margin: const EdgeInsets.only(top: 1),
+                          width: 6, height: 6,
+                          decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+                        )
+                      else
+                        const SizedBox(height: 6),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
+        ),
+      ));
+    }
+    return weeks;
   }
 }
