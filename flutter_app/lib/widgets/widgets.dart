@@ -312,3 +312,81 @@ class _ScaleOnPressState extends State<ScaleOnPress> with SingleTickerProviderSt
     );
   }
 }
+
+class EmptyState extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  const EmptyState({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final d = AppTheme.isDark(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80, height: 80,
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: d ? 0.2 : 0.06),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 36, color: AppTheme.primary.withValues(alpha: d ? 0.6 : 0.4)),
+            ),
+            const SizedBox(height: 20),
+            Text(title, textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: d ? Colors.white : AppTheme.textPrimary)),
+            if (subtitle != null) ...[
+              const SizedBox(height: 8),
+              Text(subtitle!, textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: d ? Colors.grey.shade400 : AppTheme.textSecondary)),
+            ],
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: Text(actionLabel!),
+                onPressed: onAction,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class CustomRoute<T> extends PageRouteBuilder<T> {
+  final Widget page;
+
+  CustomRoute({required this.page})
+    : super(
+        pageBuilder: (_, __, ___) => page,
+        transitionsBuilder: (_, anim, __, child) {
+          return FadeTransition(
+            opacity: anim,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.03, 0),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+              child: child,
+            ),
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      );
+}

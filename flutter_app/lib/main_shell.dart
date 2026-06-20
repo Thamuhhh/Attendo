@@ -12,6 +12,7 @@ import 'pages/report_page.dart';
 import 'pages/settings_page.dart';
 import 'l10n/strings.dart';
 import 'providers/auth_provider.dart';
+import 'widgets/widgets.dart';
 
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
@@ -54,6 +55,14 @@ class _ShellState extends ConsumerState<MainShell> {
     Icons.checklist_outlined,
     Icons.payments_outlined,
     Icons.bar_chart_outlined,
+  ];
+
+  final _filledIcons = const [
+    Icons.dashboard_rounded,
+    Icons.people_rounded,
+    Icons.checklist_rounded,
+    Icons.payments_rounded,
+    Icons.bar_chart_rounded,
   ];
 
   @override
@@ -161,7 +170,7 @@ class _ShellState extends ConsumerState<MainShell> {
                   icon: Icons.settings_rounded,
                   label: AppStrings.get('settings'),
                   isSelected: false,
-                  onTap: () { Navigator.pop(context); Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage())); },
+                  onTap: () { Navigator.pop(context); Navigator.push(context, CustomRoute(page: const SettingsPage())); },
                 ),
                 const SizedBox(height: 8),
                 const Spacer(),
@@ -244,14 +253,7 @@ class _ShellState extends ConsumerState<MainShell> {
         animationDuration: const Duration(milliseconds: 250),
         destinations: List.generate(5, (i) => NavigationDestination(
           icon: Icon(_outlinedIcons[i], color: AppTheme.greyShade(context, 500)),
-          selectedIcon: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [AppTheme.primary, AppTheme.primaryLight], begin: Alignment.topLeft, end: Alignment.bottomRight),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.check, color: Colors.white, size: 14),
-          ),
+          selectedIcon: Icon(_filledIcons[i], color: Colors.white),
           label: titles[i],
         )),
       ),

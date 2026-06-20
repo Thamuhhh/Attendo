@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/student.dart';
 import '../services/api_service.dart';
 import '../theme.dart';
+import '../l10n/strings.dart';
 import '../widgets/widgets.dart';
 import 'student_profile_page.dart';
 
@@ -165,18 +166,13 @@ class _StudentsPageState extends State<StudentsPage> {
         child: _loading
             ? ListView.builder(itemCount: 6, itemBuilder: (_, __) => const ShimmerCard())
             : _filtered.isEmpty
-                ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Icon(_searchCtrl.text.isNotEmpty ? Icons.person_search_rounded : Icons.people_outlined, size: 72, color: Colors.grey.shade300),
-                    const SizedBox(height: 16),
-                    Text(_searchCtrl.text.isNotEmpty ? 'No matching students' : 'No students yet',
-                        style: TextStyle(fontSize: 16, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 6),
-                    Text(_searchCtrl.text.isNotEmpty ? 'Try a different search' : 'Tap + to add students',
-                        style: TextStyle(fontSize: 13, color: Colors.grey.shade400)),
-                    const SizedBox(height: 12),
-                    if (_searchCtrl.text.isEmpty)
-                      Text('Server resets on restart — data is temporary', style: TextStyle(fontSize: 11, color: Colors.grey.shade400, fontStyle: FontStyle.italic)),
-                  ]))
+                ? EmptyState(
+                    icon: _searchCtrl.text.isNotEmpty ? Icons.person_search_rounded : Icons.people_outlined,
+                    title: _searchCtrl.text.isNotEmpty ? AppStrings.get('no_matching') : AppStrings.get('no_students'),
+                    subtitle: _searchCtrl.text.isNotEmpty ? AppStrings.get('search_by_name') : AppStrings.get('tap_to_add'),
+                    actionLabel: _searchCtrl.text.isEmpty ? AppStrings.get('add_student') : null,
+                    onAction: _searchCtrl.text.isEmpty ? () => _showForm() : null,
+                  )
                 : RefreshIndicator(
                     color: AppTheme.primary, onRefresh: _load,
                     child: StaggeredList(

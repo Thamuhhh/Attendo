@@ -83,14 +83,9 @@ class DashboardPageState extends State<DashboardPage> {
             Text(AppStrings.get('students_count').replaceAll('{count}', '${_today!.records.length}'), style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
             const SizedBox(height: 14),
             if (_today!.records.isEmpty)
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                alignment: Alignment.center,
-                child: Column(children: [
-                  Icon(Icons.event_busy_rounded, size: 48, color: Colors.grey.shade300),
-                  const SizedBox(height: 12),
-                  Text(AppStrings.get('no_attendance_today'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
-                ]),
+              EmptyState(
+                icon: Icons.event_busy_rounded,
+                title: AppStrings.get('no_attendance_today'),
               )
             else
               ..._today!.records.map((r) => Container(
@@ -130,11 +125,7 @@ class DashboardPageState extends State<DashboardPage> {
   Widget _buildStatCard(IconData icon, int value, String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      decoration: BoxDecoration(
-        color: AppTheme.cardColor(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.greyShade(context, 100)),
-      ),
+      decoration: AppTheme.statCard(context, color),
       child: Row(children: [
         Container(
           padding: const EdgeInsets.all(10),
