@@ -45,7 +45,6 @@ class DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final present = _today?.records.where((r) => r.status == 'present').length ?? 0;
-    final absent = _today?.records.where((r) => r.status == 'absent').length ?? 0;
 
     return BackgroundDecoration(
       child: RefreshIndicator(
@@ -129,7 +128,6 @@ class DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildStatCard(IconData icon, int value, String label, Color color) {
-    final d = AppTheme.isDark(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
