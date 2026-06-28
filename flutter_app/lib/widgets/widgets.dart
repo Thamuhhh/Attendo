@@ -13,11 +13,11 @@ class GradientAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = [
-      const Color(0xFF1976D2), const Color(0xFF388E3C), const Color(0xFFD32F2F),
-      const Color(0xFFF57C00), const Color(0xFF7B1FA2), const Color(0xFF0097A7),
-      const Color(0xFFC2185B), const Color(0xFF512DA8), const Color(0xFF00796B),
-      const Color(0xFF5D4037), const Color(0xFF455A64), const Color(0xFF303F9F),
-      const Color(0xFF0288D1), const Color(0xFF689F38), const Color(0xFFE64A19),
+      const Color(0xFF6C63FF), const Color(0xFF00C9A7), const Color(0xFFEF5350),
+      const Color(0xFFFF7043), const Color(0xFFAB47BC), const Color(0xFF26C6DA),
+      const Color(0xFFEC407A), const Color(0xFF7E57C2), const Color(0xFF66BB6A),
+      const Color(0xFF8D6E63), const Color(0xFF78909C), const Color(0xFF5C6BC0),
+      const Color(0xFF42A5F5), const Color(0xFF9CCC65), const Color(0xFFFFA726),
     ];
     final bg = colors[name.hashCode.abs() % colors.length];
     final char = name.isNotEmpty ? name[0].toUpperCase() : '?';
@@ -25,10 +25,20 @@ class GradientAvatar extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [bg, bg.withValues(alpha: 0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(color: bg.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
       child: Center(
         child: Text(char, style: TextStyle(
-          color: Colors.white, fontWeight: FontWeight.w500, fontSize: fontSize * 0.55,
+          color: Colors.white, fontWeight: FontWeight.w600, fontSize: fontSize * 0.55,
         )),
       ),
     );
@@ -214,8 +224,9 @@ class GlassCard extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final double blur;
+  final bool hasBorder;
 
-  const GlassCard({super.key, required this.child, this.padding, this.margin, this.blur = 12});
+  const GlassCard({super.key, required this.child, this.padding, this.margin, this.blur = 16, this.hasBorder = true});
 
   @override
   Widget build(BuildContext context) {
@@ -223,16 +234,32 @@ class GlassCard extends StatelessWidget {
     return Container(
       margin: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: d ? AppTheme.cardBgDark.withValues(alpha: 0.85) : Colors.white.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: d ? Colors.white.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.5)),
+        color: d
+            ? AppTheme.cardBgDark.withValues(alpha: 0.85)
+            : Colors.white.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(20),
+        border: hasBorder
+            ? Border.all(
+                color: d
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.white.withValues(alpha: 0.6),
+              )
+            : null,
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: d ? 0.2 : 0.04), blurRadius: 12, offset: const Offset(0, 6)),
-          BoxShadow(color: Colors.black.withValues(alpha: d ? 0.1 : 0.02), blurRadius: 4, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: d ? 0.25 : 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: d ? 0.1 : 0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         child: BackdropFilter(
           filter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
           child: Padding(padding: padding ?? const EdgeInsets.all(16), child: child),
@@ -244,33 +271,46 @@ class GlassCard extends StatelessWidget {
 
 class BackgroundDecoration extends StatelessWidget {
   final Widget child;
+  final double topPadding;
 
-  const BackgroundDecoration({super.key, required this.child});
+  const BackgroundDecoration({super.key, required this.child, this.topPadding = 0});
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Positioned.fill(child: CustomPaint(painter: _BgPainter())),
-        child,
+        Positioned.fill(child: CustomPaint(painter: _BgPainter(context))),
+        if (topPadding > 0)
+          Padding(padding: EdgeInsets.only(top: topPadding), child: child)
+        else
+          child,
       ],
     );
   }
 }
 
 class _BgPainter extends CustomPainter {
+  final BuildContext context;
+  _BgPainter(this.context);
+
   @override
   void paint(Canvas canvas, Size size) {
+    final d = AppTheme.isDark(context);
     final paint = Paint()..style = PaintingStyle.fill;
 
-    paint.color = AppTheme.primary.withValues(alpha: 0.03);
-    canvas.drawCircle(Offset(size.width * 0.85, -20), 180, paint);
-    canvas.drawCircle(Offset(-40, size.height * 0.4), 140, paint);
-    canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.85), 120, paint);
+    paint.color = AppTheme.primary.withValues(alpha: d ? 0.05 : 0.03);
+    canvas.drawCircle(Offset(size.width * 0.85, -20), 200, paint);
+    canvas.drawCircle(Offset(-40, size.height * 0.4), 160, paint);
+    canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.85), 140, paint);
 
-    paint.color = AppTheme.accent.withValues(alpha: 0.03);
-    canvas.drawCircle(Offset(size.width * 0.2, -30), 100, paint);
-    canvas.drawCircle(Offset(size.width - 40, size.height * 0.7), 90, paint);
+    paint.color = AppTheme.accent.withValues(alpha: d ? 0.04 : 0.025);
+    canvas.drawCircle(Offset(size.width * 0.2, -30), 120, paint);
+    canvas.drawCircle(Offset(size.width - 40, size.height * 0.7), 100, paint);
+
+    if (d) {
+      paint.color = AppTheme.primaryLight.withValues(alpha: 0.02);
+      canvas.drawCircle(Offset(size.width * 0.7, size.height * 0.2), 80, paint);
+    }
   }
 
   @override
@@ -339,27 +379,86 @@ class EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 80, height: 80,
+              width: 88, height: 88,
               decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: d ? 0.2 : 0.06),
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.primary.withValues(alpha: d ? 0.2 : 0.08),
+                    AppTheme.primary.withValues(alpha: d ? 0.1 : 0.03),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 36, color: AppTheme.primary.withValues(alpha: d ? 0.6 : 0.4)),
+              child: Icon(icon, size: 38, color: AppTheme.primary.withValues(alpha: d ? 0.6 : 0.4)),
             ),
             const SizedBox(height: 20),
             Text(title, textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: d ? Colors.white : AppTheme.textPrimary)),
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: d ? Colors.white : AppTheme.textPrimary)),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(subtitle!, textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: d ? Colors.grey.shade400 : AppTheme.textSecondary)),
+                style: TextStyle(fontSize: 14, color: d ? Colors.grey.shade400 : AppTheme.textSecondary, height: 1.4)),
             ],
             if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               ElevatedButton.icon(
                 icon: const Icon(Icons.add_rounded, size: 18),
                 label: Text(actionLabel!),
                 onPressed: onAction,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ErrorState extends StatelessWidget {
+  final String message;
+  final VoidCallback? onRetry;
+
+  const ErrorState({super.key, this.message = 'Something went wrong', this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final d = AppTheme.isDark(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 88, height: 88,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.danger.withValues(alpha: d ? 0.2 : 0.08),
+                    AppTheme.danger.withValues(alpha: d ? 0.1 : 0.03),
+                  ],
+                  begin: Alignment.topLeft, end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.error_outline_rounded, size: 38, color: AppTheme.danger.withValues(alpha: d ? 0.6 : 0.4)),
+            ),
+            const SizedBox(height: 20),
+            Text(message, textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: d ? Colors.white70 : AppTheme.textSecondary, height: 1.4)),
+            if (onRetry != null) ...[
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Retry'),
+                onPressed: onRetry,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
               ),
             ],
           ],
@@ -380,13 +479,13 @@ class CustomRoute<T> extends PageRouteBuilder<T> {
             opacity: anim,
             child: SlideTransition(
               position: Tween<Offset>(
-                begin: const Offset(0.03, 0),
+                begin: const Offset(0.04, 0),
                 end: Offset.zero,
               ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
               child: child,
             ),
           );
         },
-        transitionDuration: const Duration(milliseconds: 300),
+        transitionDuration: const Duration(milliseconds: 350),
       );
 }

@@ -5,10 +5,13 @@ import 'theme.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
 import 'services/api_service.dart';
+import 'services/offline_db.dart';
+import 'services/sync_service.dart';
 import 'pages/onboarding_page.dart';
 import 'main_shell.dart';
 import 'providers/settings_provider.dart';
 import 'providers/auth_provider.dart';
+import 'l10n/strings.dart';
 import 'utils/app_version.dart';
 
 void main() {
@@ -25,6 +28,7 @@ class MyApp extends ConsumerStatefulWidget {
 
 class _MyAppState extends ConsumerState<MyApp> {
   bool _initialized = false;
+  bool _warmingUp = true;
 
   @override
   void initState() {
@@ -33,18 +37,33 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _init() async {
-    await NotificationService().initialize();
+    final warmUpFuture = AuthService.isLoggedIn
+        ? ApiService.warmUp().timeout(const Duration(seconds: 30)).catchError((_) {})
+        : Future<void>.value();
+
+    await Future.wait([
+      NotificationService().initialize().catchError((_) {}),
+      OfflineDb.database.then((_) {}).catchError((_) {}),
+    ]);
+    SyncService.start();
     if (!mounted) return;
     ApiService.startKeepAlive();
-    if (AuthService.isLoggedIn) ApiService.warmUp();
     final enabled = await NotificationService().isEnabled;
     if (!mounted) return;
     if (enabled != ref.read(settingsProvider).notificationsEnabled) {
       ref.read(settingsProvider.notifier).toggleNotifications();
     }
+
+    await warmUpFuture;
+    if (!mounted) return;
+    _warmingUp = false;
+    if (mounted) setState(() {});
+
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (!mounted) return;
+
     setState(() => _initialized = true);
     NotificationService().scheduleDailyReminder();
-
     _checkUpdate();
   }
 
@@ -105,7 +124,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       debugShowCheckedModeBanner: false,
       theme: settings.isDark ? AppTheme.darkTheme : AppTheme.lightTheme,
       home: !_initialized
-        ? const _Splash()
+        ? _Splash(connecting: _warmingUp)
         : auth.isLoggedIn
           ? const MainShell()
           : const OnboardingPage(),
@@ -114,7 +133,8 @@ class _MyAppState extends ConsumerState<MyApp> {
 }
 
 class _Splash extends StatefulWidget {
-  const _Splash();
+  final bool connecting;
+  const _Splash({this.connecting = false});
   @override
   State<_Splash> createState() => _SplashState();
 }
@@ -122,12 +142,14 @@ class _Splash extends StatefulWidget {
 class _SplashState extends State<_Splash> with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _fade;
+  late Animation<double> _scale;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
     _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
+    _scale = Tween<double>(begin: 0.6, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
     _ctrl.forward();
   }
 
@@ -143,37 +165,112 @@ class _SplashState extends State<_Splash> with SingleTickerProviderStateMixin {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppTheme.primary, AppTheme.primaryLight],
+            begin: Alignment(-0.2, -0.5),
+            end: Alignment(0.8, 1.2),
+            colors: [AppTheme.primary, AppTheme.primaryDark],
           ),
         ),
-        child: Center(
-          child: FadeTransition(
-            opacity: _fade,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 88, height: 88,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Icon(Icons.school_rounded, size: 48, color: Colors.white),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -100, right: -100,
+              child: Container(
+                width: 300, height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.03),
                 ),
-                const SizedBox(height: 20),
-                const Text('Attendo', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 1)),
-                const SizedBox(height: 6),
-                Text('Attendance Tracker', style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.7))),
-                const SizedBox(height: 40),
-                SizedBox(
-                  width: 24, height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white.withValues(alpha: 0.8)),
-                ),
-              ],
+              ),
             ),
-          ),
+            Positioned(
+              bottom: -80, left: -80,
+              child: Container(
+                width: 250, height: 250,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.03),
+                ),
+              ),
+            ),
+            Center(
+              child: FadeTransition(
+                opacity: _fade,
+                child: ScaleTransition(
+                  scale: _scale,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 96, height: 96,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 30,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.school_rounded, size: 52, color: Colors.white),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text('Attendo', style: TextStyle(
+                        fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white,
+                        letterSpacing: 1.5, wordSpacing: 2,
+                      )),
+                      const SizedBox(height: 8),
+                      Text('Attendance Tracker', style: TextStyle(
+                        fontSize: 15, color: Colors.white.withValues(alpha: 0.7),
+                        letterSpacing: 2, fontWeight: FontWeight.w300,
+                      )),
+                      const SizedBox(height: 40),
+                      SizedBox(
+                        width: 28, height: 28,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      AnimatedOpacity(
+                        opacity: widget.connecting ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 400),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 6, height: 6,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.green.withValues(alpha: 0.7),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.green.withValues(alpha: 0.3),
+                                    blurRadius: 4,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              AppStrings.get('connecting'),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white.withValues(alpha: 0.7),
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

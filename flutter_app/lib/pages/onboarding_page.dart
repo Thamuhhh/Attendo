@@ -88,6 +88,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> with TickerProv
   }
 
   Widget _buildBottom() {
+    final currentSlide = _slides[_current];
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
       child: Column(
@@ -100,7 +101,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> with TickerProv
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: isActive ? 28 : 8,
+                width: isActive ? 32 : 8,
                 height: 8,
                 decoration: BoxDecoration(
                   gradient: isActive
@@ -113,7 +114,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> with TickerProv
               );
             }),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 36),
           SizedBox(
             width: double.infinity,
             height: 56,
@@ -121,11 +122,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> with TickerProv
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
                 gradient: LinearGradient(
-                  colors: [_slides[_current].color, _slides[_current].color.withValues(alpha: 0.75)],
+                  colors: [currentSlide.color, currentSlide.color.withValues(alpha: 0.75)],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 ),
-                boxShadow: [BoxShadow(color: _slides[_current].color.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
+                boxShadow: [
+                  BoxShadow(color: currentSlide.color.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 6)),
+                ],
               ),
               child: Material(
                 color: Colors.transparent,
@@ -144,12 +147,12 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> with TickerProv
                       children: [
                         Text(
                           _current < _slides.length - 1 ? 'Next' : 'Get Started',
-                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white),
+                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5),
                         ),
                         const SizedBox(width: 8),
                         Icon(
                           _current < _slides.length - 1 ? Icons.arrow_forward_rounded : Icons.rocket_launch_rounded,
-                          color: Colors.white, size: 20,
+                          color: Colors.white, size: 22,
                         ),
                       ],
                     ),
@@ -171,7 +174,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> with TickerProv
               Text('Already have an account? ', style: TextStyle(color: Colors.grey.shade500)),
               GestureDetector(
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage())),
-                child: Text('Login', style: TextStyle(color: _slides[_current].color, fontWeight: FontWeight.w700)),
+                child: Text('Login', style: TextStyle(color: currentSlide.color, fontWeight: FontWeight.w700)),
               ),
             ],
           ),
@@ -209,9 +212,26 @@ class _SlideWidget extends StatelessWidget {
               final s = 1.0 + pulseCtrl.value * 0.03;
               return Transform.scale(
                 scale: s,
-                child: data.imageUrl != null
-                    ? Image.network(data.imageUrl!, width: 140, height: 140, fit: BoxFit.contain, errorBuilder: (_, __, ___) => Icon(data.icon ?? Icons.school, size: 72, color: data.color))
-                    : Icon(data.icon, size: 72, color: data.color),
+                child: Container(
+                  width: 160, height: 160,
+                  decoration: BoxDecoration(
+                    color: data.color.withValues(alpha: 0.06),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: data.color.withValues(alpha: 0.08),
+                        blurRadius: 30,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: data.imageUrl != null
+                        ? Image.network(data.imageUrl!, width: 90, height: 90, fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => Icon(data.icon ?? Icons.school, size: 60, color: data.color))
+                        : Icon(data.icon, size: 60, color: data.color),
+                  ),
+                ),
               );
             },
           ),
@@ -219,13 +239,13 @@ class _SlideWidget extends StatelessWidget {
           Text(
             data.title,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: AppTheme.textPrimary, height: 1.2),
+            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: AppTheme.textPrimary, height: 1.2, letterSpacing: -0.5),
           ),
           const SizedBox(height: 16),
           Text(
             data.desc,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 15, color: Colors.grey.shade500, height: 1.6),
+            style: const TextStyle(fontSize: 15, color: AppTheme.textSecondary, height: 1.6),
           ),
           const Spacer(flex: 3),
         ],

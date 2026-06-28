@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'l10n/strings.dart';
 
 class AppTheme {
-  static const Color primary = Color(0xFF1A237E);
-  static const Color primaryLight = Color(0xFF534BAE);
-  static const Color accent = Color(0xFF00BFA5);
-  static const Color surface = Color(0xFFF0F2F5);
+  // Premium modern palette
+  static const Color primary = Color(0xFF6C63FF);     // Vibrant purple-indigo
+  static const Color primaryLight = Color(0xFFA5A0FF); // Light purple
+  static const Color primaryDark = Color(0xFF4A42D4);  // Dark purple
+  static const Color accent = Color(0xFF00C9A7);       // Mint teal
+  static const Color accentLight = Color(0xFF5EFFE0);
+  static const Color surface = Color(0xFFF0F2F8);
   static const Color surfaceDark = Color(0xFF0D0D1A);
   static const Color cardBg = Colors.white;
   static const Color cardBgDark = Color(0xFF1A1A2E);
@@ -21,49 +25,42 @@ class AppTheme {
   static Color greyShade(BuildContext context, int shade) {
     if (!isDark(context)) {
       switch (shade) {
-        case 50: return Colors.grey.shade50;
-        case 100: return Colors.grey.shade100;
-        case 200: return Colors.grey.shade200;
-        case 300: return Colors.grey.shade300;
-        case 400: return Colors.grey.shade400;
-        case 500: return Colors.grey.shade500;
-        case 600: return Colors.grey.shade600;
-        default: return Colors.grey;
+        case 50: return const Color(0xFFF0F2F5);
+        case 100: return const Color(0xFFE5E7EB);
+        case 200: return const Color(0xFFD1D5DB);
+        case 300: return const Color(0xFF9CA3AF);
+        case 400: return const Color(0xFF6B7280);
+        case 500: return const Color(0xFF4B5563);
+        case 600: return const Color(0xFF374151);
+        default: return const Color(0xFF9CA3AF);
       }
     }
     switch (shade) {
-      case 50: return const Color(0xFF2A2A3E);
-      case 100: return const Color(0xFF2A2A3E);
-      case 200: return const Color(0xFF3A3A4E);
-      case 300: return const Color(0xFF4A4A5E);
+      case 50: return const Color(0xFF1F1F35);
+      case 100: return const Color(0xFF2A2A40);
+      case 200: return const Color(0xFF3A3A50);
+      case 300: return const Color(0xFF4A4A60);
       case 400: return const Color(0xFF6B6B7E);
       case 500: return const Color(0xFF8B8B9E);
       case 600: return const Color(0xFF9B9BAE);
-      default: return const Color(0xFF3A3A4E);
+      default: return const Color(0xFF3A3A50);
     }
   }
 
   static ThemeData get lightTheme {
-    return _baseTheme(
-      surface,
-      Colors.white,
-      Colors.grey.shade50,
-      Colors.grey.shade300,
-    );
+    return _baseTheme(surface, Colors.white, const Color(0xFFF0F2F5), const Color(0xFFD1D5DB));
   }
 
   static ThemeData get darkTheme {
-    return _baseTheme(
-      surfaceDark,
-      cardBgDark,
-      const Color(0xFF2A2A3E),
-      const Color(0xFF3A3A4E),
-    );
+    return _baseTheme(surfaceDark, cardBgDark, const Color(0xFF1F1F35), const Color(0xFF3A3A50));
   }
+
+  static TextTheme get _poppins => GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme);
 
   static ThemeData _baseTheme(Color scaffoldBg, Color cardBg, Color inputFill, Color inputBorder) {
     return ThemeData(
       useMaterial3: true,
+      textTheme: _poppins,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primary,
         primary: primary,
@@ -79,9 +76,9 @@ class AppTheme {
         foregroundColor: Colors.white,
       ),
       cardTheme: CardThemeData(
-        elevation: 2,
-        shadowColor: Colors.black.withValues(alpha: 0.08),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         color: cardBg,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       ),
@@ -89,42 +86,43 @@ class AppTheme {
         filled: true,
         fillColor: inputFill,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: inputBorder),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: inputBorder),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: primary, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        labelStyle: TextStyle(fontSize: 14, color: textSecondary),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           backgroundColor: primary,
           foregroundColor: Colors.white,
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        elevation: 8,
-        backgroundColor: cardBg,
-        indicatorColor: primary.withValues(alpha: 0.12),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        indicatorColor: primary.withValues(alpha: 0.15),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: primary);
+            return const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: primary, letterSpacing: 0.3);
           }
-          return TextStyle(fontSize: 12, color: Colors.grey.shade600);
+          return TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.grey.shade500);
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: primary, size: 22);
+            return const IconThemeData(color: primary, size: 24);
           }
           return IconThemeData(color: Colors.grey.shade400, size: 22);
         }),
@@ -132,45 +130,97 @@ class AppTheme {
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: accent,
         foregroundColor: Colors.white,
-        elevation: 4,
+        elevation: 6,
         shape: CircleBorder(),
       ),
-      dividerTheme: DividerThemeData(color: Colors.grey.shade200),
+      dividerTheme: DividerThemeData(color: Colors.grey.shade200, thickness: 0.5, space: 1),
       dialogTheme: DialogThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 0,
       ),
       bottomSheetTheme: const BottomSheetThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }
 
   static PreferredSizeWidget gradientAppBar(String title, {List<Widget>? actions, Widget? leading, BuildContext? context}) {
     return PreferredSize(
-      preferredSize: const Size.fromHeight(64),
+      preferredSize: const Size.fromHeight(80),
       child: Container(
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [primary, primaryLight],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            colors: [primary, primaryDark],
+            begin: Alignment(-0.2, -0.5),
+            end: Alignment(0.8, 1.2),
           ),
-          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
           boxShadow: [
             BoxShadow(
               color: context != null && isDark(context)
-                  ? Colors.black.withValues(alpha: 0.4)
-                  : const Color(0x29000000),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+                  ? Colors.black.withValues(alpha: 0.5)
+                  : primary.withValues(alpha: 0.3),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
         child: AppBar(
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.5, fontSize: 18)),
           centerTitle: true,
           actions: actions,
           leading: leading,
+        ),
+      ),
+    );
+  }
+
+  static PreferredSizeWidget whatsappAppBar(String title, {Widget? leading}) {
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(72),
+      child: Container(
+        decoration: BoxDecoration(
+          color: primary,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: SizedBox(
+            height: 72,
+            child: Stack(
+              children: [
+                if (leading != null)
+                  Positioned(left: 4, top: 0, bottom: 0, child: leading),
+                Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 36, height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(11),
+                        ),
+                        child: const Icon(Icons.school_rounded, size: 20, color: Colors.white),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 22, color: Colors.white, letterSpacing: 0.5)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -181,14 +231,44 @@ class AppTheme {
     return BoxDecoration(
       gradient: LinearGradient(
         colors: [
-          color.withValues(alpha: d ? 0.2 : 0.12),
-          color.withValues(alpha: d ? 0.08 : 0.04),
+          color.withValues(alpha: d ? 0.2 : 0.1),
+          color.withValues(alpha: d ? 0.05 : 0.02),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      borderRadius: BorderRadius.circular(18),
-      border: Border.all(color: color.withValues(alpha: d ? 0.3 : 0.15), width: 1.5),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(color: color.withValues(alpha: d ? 0.25 : 0.12), width: 1.5),
+      boxShadow: [
+        BoxShadow(color: color.withValues(alpha: d ? 0.1 : 0.06), blurRadius: 12, offset: const Offset(0, 4)),
+      ],
+    );
+  }
+
+  static BoxDecoration gradientCard(BuildContext context) {
+    final d = isDark(context);
+    return BoxDecoration(
+      borderRadius: BorderRadius.circular(20),
+      gradient: LinearGradient(
+        colors: [
+          cardColor(context),
+          cardColor(context).withValues(alpha: 0.95),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: d ? Colors.black.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.04),
+          blurRadius: 16,
+          offset: const Offset(0, 6),
+        ),
+        BoxShadow(
+          color: d ? Colors.black.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.02),
+          blurRadius: 4,
+          offset: const Offset(0, 2),
+        ),
+      ],
     );
   }
 
@@ -198,9 +278,9 @@ class AppTheme {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark(context) ? 0.25 : 0.12),
+        color: color.withValues(alpha: isDark(context) ? 0.2 : 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: isDark(context) ? 0.5 : 0.3)),
+        border: Border.all(color: color.withValues(alpha: isDark(context) ? 0.4 : 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -221,9 +301,9 @@ class AppTheme {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: isDark(context) ? 0.25 : 0.12),
+        color: color.withValues(alpha: isDark(context) ? 0.2 : 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: isDark(context) ? 0.5 : 0.3)),
+        border: Border.all(color: color.withValues(alpha: isDark(context) ? 0.4 : 0.2)),
       ),
       child: Text(
         '$percent%',
@@ -248,14 +328,14 @@ class AppTheme {
           children: [
             _animatedIcon(isError ? Icons.error_rounded : Icons.check_circle_rounded, isError),
             const SizedBox(width: 10),
-            Expanded(child: Text(message, style: const TextStyle(fontWeight: FontWeight.w500))),
+            Expanded(child: Text(message, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
           ],
         ),
         backgroundColor: isError ? danger : success,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        margin: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         duration: const Duration(seconds: 3),
         dismissDirection: DismissDirection.horizontal,
       ),
@@ -267,7 +347,7 @@ class AppTheme {
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 400),
       curve: Curves.elasticOut,
-      builder: (ctx, v, _) => Transform.scale(scale: v, child: Icon(icon, color: Colors.white, size: 22)),
+      builder: (ctx, v, _) => Transform.scale(scale: v, child: Icon(icon, color: Colors.white, size: 24)),
     );
   }
 
@@ -276,35 +356,38 @@ class AppTheme {
     return await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: cardColor(context),
+        elevation: 0,
         title: Row(children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: (isDestructive ? danger : primary).withValues(alpha: d ? 0.3 : 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(isDestructive ? Icons.delete_outline_rounded : Icons.info_outline_rounded,
-                color: isDestructive ? danger : primary, size: 22),
+                color: isDestructive ? danger : primary, size: 24),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: d ? Colors.white : textPrimary)),
         ]),
-        content: Text(message, style: TextStyle(fontSize: 14, color: d ? Colors.grey.shade300 : textSecondary, height: 1.4)),
+        content: Text(message, style: TextStyle(fontSize: 14, color: d ? Colors.grey.shade300 : textSecondary, height: 1.5)),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(AppStrings.get('cancel'), style: TextStyle(fontWeight: FontWeight.w600, color: d ? Colors.grey.shade400 : Colors.grey.shade600)),
+            child: Text(AppStrings.get('cancel'), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: d ? Colors.grey.shade400 : Colors.grey.shade600)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: isDestructive ? danger : primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              elevation: 0,
             ),
-            child: Text(confirmLabel, style: const TextStyle(fontWeight: FontWeight.w700)),
+            child: Text(confirmLabel, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
           ),
         ],
       ),
@@ -366,7 +449,7 @@ class _ShimmerCardState extends State<ShimmerCard> with SingleTickerProviderStat
     return Container(
       width: w, height: h,
       decoration: BoxDecoration(
-        color: d ? const Color(0xFF3A3A4E) : Colors.grey.shade200,
+        color: d ? const Color(0xFF3A3A50) : Colors.grey.shade200,
         borderRadius: BorderRadius.circular(h / 2),
       ),
     );

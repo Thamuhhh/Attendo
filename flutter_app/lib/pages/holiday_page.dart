@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
+import '../l10n/strings.dart';
 import '../services/api_service.dart';
+import '../widgets/widgets.dart';
 
 class HolidayPage extends StatefulWidget {
   final Set<String> currentHolidays;
@@ -39,23 +41,23 @@ class _HolidayPageState extends State<HolidayPage> {
       await ApiService.addHoliday(dateStr);
       setState(() => _holidays.add(dateStr));
       widget.onChanged(_holidays);
-      if (mounted) AppTheme.showToast(context, 'Holiday added');
+      if (mounted) AppTheme.showToast(context, AppStrings.get('holiday_added'));
     } catch (e) {
-      if (mounted) AppTheme.showToast(context, 'Failed to add holiday', isError: true);
+      if (mounted) AppTheme.showToast(context, AppStrings.get('holiday_add_failed'), isError: true);
     }
   }
 
   Future<void> _remove(String date) async {
-    final confirmed = await AppTheme.showConfirm(context, 'Remove Holiday',
-      'Remove this holiday from the list?', confirmLabel: 'Remove');
+    final confirmed = await AppTheme.showConfirm(context, AppStrings.get('remove_holiday'),
+      AppStrings.get('remove_holiday_confirm'), confirmLabel: AppStrings.get('remove'));
     if (!confirmed) return;
     try {
       await ApiService.removeHoliday(date);
       setState(() => _holidays.remove(date));
       widget.onChanged(_holidays);
-      if (mounted) AppTheme.showToast(context, 'Holiday removed');
+      if (mounted) AppTheme.showToast(context, AppStrings.get('holiday_removed'));
     } catch (e) {
-      if (mounted) AppTheme.showToast(context, 'Failed to remove holiday', isError: true);
+      if (mounted) AppTheme.showToast(context, AppStrings.get('holiday_remove_failed'), isError: true);
     }
   }
 
@@ -70,76 +72,72 @@ class _HolidayPageState extends State<HolidayPage> {
 
   @override
   Widget build(BuildContext context) {
+    final d = AppTheme.isDark(context);
     final sorted = _holidays.toList()..sort((a, b) => b.compareTo(a));
 
     return Scaffold(
-      body: Column(children: [
-        AppTheme.gradientAppBar('Holidays', leading: IconButton(
-          icon: const Icon(Icons.close_rounded, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        )),
-        if (sorted.isEmpty)
-          Expanded(child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(Icons.luggage_rounded, size: 72, color: Colors.grey.shade300),
-            const SizedBox(height: 16),
-            Text('No holidays set', style: TextStyle(fontSize: 16, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
-            const SizedBox(height: 6),
-            Text('Tap + to add a holiday', style: TextStyle(fontSize: 13, color: Colors.grey.shade400)),
-          ])))
-        else
-          Expanded(child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            children: sorted.map((date) => Dismissible(
-              key: ValueKey(date),
-              direction: DismissDirection.endToStart,
-              background: Container(
-                alignment: Alignment.centerRight,
-                padding: const EdgeInsets.only(right: 20),
-                decoration: BoxDecoration(color: AppTheme.danger, borderRadius: BorderRadius.circular(14)),
-                child: const Icon(Icons.delete_rounded, color: Colors.white),
-              ),
-              confirmDismiss: (_) async => AppTheme.showConfirm(context, 'Remove Holiday',
-                'Remove this holiday from the list?', confirmLabel: 'Remove'),
-              onDismissed: (_) async {
-                try {
-                  await ApiService.removeHoliday(date);
-                  setState(() => _holidays.remove(date));
-                  widget.onChanged(_holidays);
-                  if (mounted) AppTheme.showToast(context, 'Holiday removed');
-                } catch (e) {
-                  if (mounted) AppTheme.showToast(context, 'Failed to remove holiday', isError: true);
-                }
-              },
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
-                ),
-                child: Row(children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: AppTheme.warning.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.celebration_rounded, color: AppTheme.warning, size: 22),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_formatDate(date), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: AppTheme.textPrimary)),
-                    ],
-                  )),
-                  IconButton(
-                    icon: Icon(Icons.close_rounded, color: Colors.grey.shade400, size: 20),
-                    onPressed: () => _remove(date),
-                  ),
-                ]),
-              ),
-            )).toList(),
+      body: BackgroundDecoration(
+        child: Column(children: [
+          AppTheme.gradientAppBar(AppStrings.get('holidays'), leading: IconButton(
+            icon: const Icon(Icons.close_rounded, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
           )),
-      ]),
+          if (sorted.isEmpty)
+            Expanded(child: EmptyState(
+              icon: Icons.luggage_rounded,
+              title: AppStrings.get('no_holidays'),
+              subtitle: AppStrings.get('tap_to_add_holiday'),
+            ))
+          else
+            Expanded(child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+              children: sorted.map((date) => Dismissible(
+                key: ValueKey(date),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  decoration: BoxDecoration(color: AppTheme.danger, borderRadius: BorderRadius.circular(16)),
+                  child: const Icon(Icons.delete_rounded, color: Colors.white),
+                ),
+                confirmDismiss: (_) async => AppTheme.showConfirm(context, AppStrings.get('remove_holiday'),
+                  AppStrings.get('remove_holiday_confirm'), confirmLabel: 'Remove'),
+                onDismissed: (_) async {
+                  try {
+                    await ApiService.removeHoliday(date);
+                    setState(() => _holidays.remove(date));
+                    widget.onChanged(_holidays);
+                    if (mounted) AppTheme.showToast(context, AppStrings.get('holiday_removed'));
+                  } catch (e) {
+                    if (mounted) AppTheme.showToast(context, AppStrings.get('remove_holiday_failed'), isError: true);
+                  }
+                },
+                child: GlassCard(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Row(children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(color: AppTheme.warning.withValues(alpha: d ? 0.3 : 0.1), borderRadius: BorderRadius.circular(12)),
+                      child: const Icon(Icons.celebration_rounded, color: AppTheme.warning, size: 22),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_formatDate(date), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: d ? Colors.white : AppTheme.textPrimary)),
+                      ],
+                    )),
+                    IconButton(
+                      icon: Icon(Icons.close_rounded, color: AppTheme.greyShade(context, 400), size: 20),
+                      onPressed: () => _remove(date),
+                    ),
+                  ]),
+                ),
+              )).toList(),
+            )),
+        ]),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _add,
         backgroundColor: AppTheme.primary,

@@ -137,7 +137,7 @@ class ApiService {
       headers: _headers,
       body: jsonEncode({'date': date, 'records': records}),
     ).timeout(const Duration(seconds: 60));
-    if (res.statusCode != 200) throw Exception('Failed to save attendance');
+    if (res.statusCode != 200 && res.statusCode != 201) throw Exception('Failed to save attendance');
     clearCache();
   }
 
@@ -172,7 +172,7 @@ class ApiService {
       headers: _headers,
       body: jsonEncode({'records': records}),
     ).timeout(const Duration(seconds: 60));
-    if (res.statusCode != 200) throw Exception('Failed to save fees');
+    if (res.statusCode != 200 && res.statusCode != 201) throw Exception('Failed to save fees');
     clearCache();
   }
 

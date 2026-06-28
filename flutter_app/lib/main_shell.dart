@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme.dart';
@@ -85,48 +86,43 @@ class _ShellState extends ConsumerState<MainShell> {
     return Scaffold(
       extendBody: true,
       drawer: Drawer(
+        backgroundColor: AppTheme.cardColor(context),
         child: Container(
           color: AppTheme.cardColor(context),
           child: SafeArea(
             child: Column(
               children: [
                 Container(
-                  padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
-                  decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: AppTheme.greyShade(context, 200))),
+                  padding: const EdgeInsets.fromLTRB(20, 40, 20, 24),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppTheme.primary, AppTheme.primaryDark],
+                      begin: Alignment(-0.2, -0.5),
+                      end: Alignment(0.8, 1.2),
+                    ),
+                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
                   ),
                   child: Row(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(14),
-                        child: Image.network(
-                          'https://res.cloudinary.com/db33m8gqe/image/upload/q_auto/f_auto/v1781682894/New_Project_elxu7s.png',
-                          width: 52, height: 52,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => CircleAvatar(
-                            radius: 26,
-                            backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                            child: Text(
-                              (AuthService.institutionName ?? 'T')[0].toUpperCase(),
-                              style: const TextStyle(fontSize: 24, color: AppTheme.primary, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
+                      GradientAvatar(
+                        name: AuthService.institutionName ?? 'Attendo',
+                        size: 56,
+                        fontSize: 22,
                       ),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               AuthService.institutionName ?? AppStrings.get('my_institution'),
-                              style: TextStyle(fontSize: 17, color: d ? Colors.white : AppTheme.textPrimary, fontWeight: FontWeight.w700),
+                              style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w700),
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 4),
                             Text(
                               AuthService.institutionEmail ?? '',
-                              style: TextStyle(fontSize: 12, color: AppTheme.greyShade(context, 500)),
+                              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.7)),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
@@ -135,7 +131,7 @@ class _ShellState extends ConsumerState<MainShell> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 _DrawerItem(
                   icon: Icons.dashboard_rounded,
                   label: titles[0],
@@ -217,45 +213,60 @@ class _ShellState extends ConsumerState<MainShell> {
       ),
       body: Column(
         children: [
-          AppTheme.gradientAppBar(titles[_currentIndex], leading: Builder(
+          AppTheme.whatsappAppBar('Attendo', leading: Builder(
             builder: (ctx) => IconButton(
               icon: const Icon(Icons.menu_rounded, color: Colors.white),
               onPressed: () => Scaffold.of(ctx).openDrawer(),
             ),
           )),
           Expanded(
-            child: RepaintBoundary(
-              child: PageView(
-                controller: _pageCtrl,
-                physics: const BouncingScrollPhysics(),
-                onPageChanged: (i) {
-                  setState(() => _currentIndex = i);
-                  if (i == 0) _dashboardKey.currentState?.load();
-                },
-                children: _pages.map((p) => RepaintBoundary(child: p)).toList(),
-              ),
+            child: PageView(
+              controller: _pageCtrl,
+              physics: const BouncingScrollPhysics(),
+              onPageChanged: (i) {
+                setState(() => _currentIndex = i);
+                if (i == 0) _dashboardKey.currentState?.load();
+              },
+              children: _pages,
             ),
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (i) {
-          _pageCtrl.animateToPage(i, duration: const Duration(milliseconds: 250), curve: Curves.easeOutCubic);
-          setState(() => _currentIndex = i);
-        },
-        elevation: 8,
-        shadowColor: AppTheme.primary.withValues(alpha: 0.15),
-        backgroundColor: AppTheme.cardColor(context),
-        indicatorColor: AppTheme.primary.withValues(alpha: 0.12),
-        height: 68,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        animationDuration: const Duration(milliseconds: 250),
-        destinations: List.generate(5, (i) => NavigationDestination(
-          icon: Icon(_outlinedIcons[i], color: AppTheme.greyShade(context, 500)),
-          selectedIcon: Icon(_filledIcons[i], color: Colors.white),
-          label: titles[i],
-        )),
+      bottomNavigationBar: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: BackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: (d ? AppTheme.cardBgDark : Colors.white).withValues(alpha: d ? 0.9 : 0.85),
+              border: Border(
+                top: BorderSide(
+                  color: d ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
+                ),
+              ),
+            ),
+            child: NavigationBar(
+              selectedIndex: _currentIndex,
+              onDestinationSelected: (i) {
+                _pageCtrl.animateToPage(i, duration: const Duration(milliseconds: 250), curve: Curves.easeOutCubic);
+                setState(() => _currentIndex = i);
+              },
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              indicatorColor: AppTheme.primary.withValues(alpha: 0.15),
+              height: 68,
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              animationDuration: const Duration(milliseconds: 250),
+              shadowColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              destinations: List.generate(5, (i) => NavigationDestination(
+                icon: Icon(_outlinedIcons[i], color: AppTheme.greyShade(context, 500)),
+                selectedIcon: Icon(_filledIcons[i], color: AppTheme.primary),
+                label: titles[i],
+              )),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -279,7 +290,7 @@ class _DrawerItem extends StatelessWidget {
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
           gradient: isSelected
-              ? const LinearGradient(colors: [AppTheme.primary, AppTheme.primaryLight], begin: Alignment.centerLeft, end: Alignment.centerRight)
+              ? const LinearGradient(colors: [AppTheme.primary, AppTheme.primaryDark], begin: Alignment.centerLeft, end: Alignment.centerRight)
               : null,
           borderRadius: BorderRadius.circular(14),
           color: isSelected ? null : Colors.transparent,
