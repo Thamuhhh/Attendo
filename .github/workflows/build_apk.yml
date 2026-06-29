@@ -1,0 +1,55 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'flutter_app/**'
+      - '.github/workflows/build_apk.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: flutter_app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: attendo-debug-apk
+          path: flutter_app/build/app/outputs/flutter-apk/*.apk
+
+      - name: Get version
+        id: version
+        run: echo "tag=v$(grep '^version:' pubspec.yaml | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }}
+          files: flutter_app/build/app/outputs/flutter-apk/*.apk
+          generate_release_notes: true
