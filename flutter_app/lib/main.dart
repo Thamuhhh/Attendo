@@ -72,36 +72,67 @@ class _MyAppState extends ConsumerState<MyApp> {
       final data = await ApiService.getAppVersion();
       final remoteVer = data['version'] as String? ?? '1.0.0';
       final apkUrl = data['apkUrl'] as String? ?? '';
+      final forceUpdate = data['forceUpdate'] as bool? ?? false;
       if (!AppVersion.isNewer(remoteVer) || apkUrl.isEmpty) return;
       if (!mounted) return;
       showDialog(
         context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          title: Row(children: [
-            const Icon(Icons.system_update_rounded, color: AppTheme.primary),
-            const SizedBox(width: 10),
-            const Text('Update Available'),
-          ]),
-          content: Text('Version $remoteVer is available. You have ${AppVersion.current}.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Later'),
+        barrierDismissible: !forceUpdate,
+        builder: (ctx) => PopScope(
+          canPop: !forceUpdate,
+          child: AlertDialog(
+            title: Row(children: [
+              const Icon(Icons.system_update_rounded, color: AppTheme.primary),
+              const SizedBox(width: 10),
+              Text(forceUpdate ? 'Update Required' : 'Update Available'),
+            ]),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Version $remoteVer is available. You have ${AppVersion.current}.'),
+                if (forceUpdate) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.danger.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(children: [
+                      Icon(Icons.warning_amber_rounded, size: 18, color: AppTheme.danger),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'This update is mandatory. Please update to continue using the app.',
+                          style: TextStyle(fontSize: 13, color: AppTheme.danger),
+                        ),
+                      ),
+                    ]),
+                  ),
+                ],
+              ],
             ),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.download_rounded, size: 18),
-              label: const Text('Update'),
-              onPressed: () async {
-                Navigator.pop(ctx);
-                await _downloadAndInstall(apkUrl);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
+            actions: [
+              if (!forceUpdate)
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Later'),
+                ),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.download_rounded, size: 18),
+                label: const Text('Update'),
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  await _downloadAndInstall(apkUrl);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     } catch (_) {}

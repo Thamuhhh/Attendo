@@ -74,6 +74,7 @@ app.get('/api/app/version', (req, res) => {
   res.json({
     version: '1.0.1',
     apkUrl: 'https://github.com/Thamuhhh/Attendo/releases/download/v1.0.1/app-release.apk',
+    forceUpdate: false,
   });
 });
 
