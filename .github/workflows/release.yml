@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: read
     defaults:
       run:
         working-directory: flutter_app
@@ -48,8 +49,10 @@ jobs:
       - run: flutter build apk --release
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            flutter_app/build/app/outputs/flutter-apk/app-release.apk \
+            --title "Release ${GITHUB_REF_NAME}" \
+            --notes "Auto-built APK for ${GITHUB_REF_NAME}"
         env:
-          ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
-        with:
-          files: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          GH_TOKEN: ${{ github.token }}
