@@ -180,7 +180,8 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
           Text('Attendance History', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: d ? Colors.white : AppTheme.textPrimary)),
           const Spacer(),
           if (!_loading)
-            Text('${_attendanceHistory.length} days', style: TextStyle(fontSize: 12, color: AppTheme.greyShade(context, 500), fontWeight: FontWeight.w500)),
+            Text('${_attendanceHistory.where((a) => (a['date'] as String).startsWith('$_calendarYear-${_calendarMonth.toString().padLeft(2, '0')}') && a['status'] == 'present').length} present',
+                style: TextStyle(fontSize: 12, color: AppTheme.success, fontWeight: FontWeight.w600)),
         ]),
         const SizedBox(height: 16),
         if (_loading)
