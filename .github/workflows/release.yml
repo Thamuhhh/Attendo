@@ -46,12 +46,17 @@ jobs:
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "storeFile=app/keystore.jks" >> android/key.properties
 
-      - run: flutter build apk --release
+      - run: flutter build apk --release --split-per-abi --obfuscate --split-debug-info=debug-info --target-platform android-arm64
+
+      - name: Rename APK
+        run: |
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+             build/app/outputs/flutter-apk/attendo-${{ github.ref_name }}.apk
 
       - name: Create Release
         run: |
           gh release create "${GITHUB_REF_NAME}" \
-            flutter_app/build/app/outputs/flutter-apk/app-release.apk \
+            build/app/outputs/flutter-apk/attendo-${{ github.ref_name }}.apk \
             --title "Release ${GITHUB_REF_NAME}" \
             --notes "Auto-built APK for ${GITHUB_REF_NAME}"
         env:
