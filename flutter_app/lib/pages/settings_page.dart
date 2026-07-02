@@ -9,6 +9,7 @@ import '../services/auth_service.dart';
 import '../services/offline_db.dart';
 import '../utils/app_version.dart';
 import '../widgets/widgets.dart';
+import 'reminders_page.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -96,6 +97,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with SingleTickerPr
                           activeColor: Colors.green,
                           activeTrackColor: Colors.green.withValues(alpha: 0.3),
                         ),
+                      ),
+                      _divider(),
+                      _SettingTile.nav(
+                        icon: Icons.tune_rounded,
+                        iconColor: AppTheme.accent,
+                        title: 'Manage Reminders',
+                        subtitle: 'Multiple profiles, days & smart detection',
+                        onTap: () => Navigator.push(context, CustomRoute(page: const RemindersPage())),
                       ),
                     ]),
                   ),

@@ -63,7 +63,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     if (!mounted) return;
 
     setState(() => _initialized = true);
-    NotificationService().scheduleDailyReminder();
+    NotificationService().scheduleAllReminders();
     _checkUpdate();
   }
 
