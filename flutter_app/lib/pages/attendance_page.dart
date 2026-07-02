@@ -312,8 +312,7 @@ class _AttendancePageState extends State<AttendancePage> {
                         itemBuilder: (_, i) {
                           final s = _filteredStudents[i];
                           final ip = _statusMap[s.id] == 'present';
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
+                          return Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             decoration: BoxDecoration(
                               color: AppTheme.cardColor(context),
@@ -332,23 +331,20 @@ class _AttendancePageState extends State<AttendancePage> {
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                 child: Row(children: [
-                                  AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeOutBack,
-                                    width: ip ? 50 : 44, height: ip ? 50 : 44,
+                                  Container(
+                                    width: 48, height: 48,
                                     decoration: BoxDecoration(
                                       gradient: ip
                                           ? const LinearGradient(colors: [AppTheme.success, Color(0xFF059669)], begin: Alignment.topLeft, end: Alignment.bottomRight)
                                           : null,
                                       color: ip ? null : AppTheme.greyShade(context, 100),
-                                      borderRadius: BorderRadius.circular(ip ? 14 : 12),
+                                      borderRadius: BorderRadius.circular(14),
                                       boxShadow: ip ? [BoxShadow(color: AppTheme.success.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))] : null,
                                     ),
-                                    child: AnimatedSwitcher(
-                                      duration: const Duration(milliseconds: 200),
-                                      child: ip
-                                          ? const Icon(Icons.check_circle_rounded, color: Colors.white, size: 28, key: ValueKey('p'))
-                                          : const Icon(Icons.radio_button_unchecked_rounded, color: Colors.grey, size: 24, key: ValueKey('a')),
+                                    child: Icon(
+                                      ip ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                                      color: ip ? Colors.white : Colors.grey,
+                                      size: ip ? 28 : 24,
                                     ),
                                   ),
                                   const SizedBox(width: 14),
@@ -356,22 +352,17 @@ class _AttendancePageState extends State<AttendancePage> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(s.name, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: d ? Colors.white : AppTheme.textPrimary)),
-                                      AnimatedDefaultTextStyle(
-                                        duration: const Duration(milliseconds: 300),
+                                      Text(
+                                        ip ? AppStrings.get('present') : AppStrings.get('absent'),
                                         style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ip ? AppTheme.success : AppTheme.danger),
-                                        child: Text(ip ? AppStrings.get('present') : AppStrings.get('absent')),
                                       ),
                                     ],
                                   )),
-                                  AnimatedScale(
-                                    scale: ip ? 1 : 0.85,
-                                    duration: const Duration(milliseconds: 300),
-                                    child: Switch(
-                                      value: ip,
-                                      activeColor: Colors.white,
-                                      activeTrackColor: AppTheme.success.withValues(alpha: 0.5),
-                                      onChanged: (_) => _toggle(s.id),
-                                    ),
+                                  Switch(
+                                    value: ip,
+                                    activeColor: Colors.white,
+                                    activeTrackColor: AppTheme.success.withValues(alpha: 0.5),
+                                    onChanged: (_) => _toggle(s.id),
                                   ),
                                 ]),
                               ),

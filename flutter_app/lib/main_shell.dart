@@ -1,4 +1,3 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme.dart';
@@ -234,18 +233,23 @@ class _ShellState extends ConsumerState<MainShell> {
       ),
       bottomNavigationBar: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            decoration: BoxDecoration(
-              color: (d ? AppTheme.cardBgDark : Colors.white).withValues(alpha: d ? 0.9 : 0.85),
-              border: Border(
-                top: BorderSide(
-                  color: d ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
-                ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: d ? AppTheme.cardBgDark : Colors.white,
+            border: Border(
+              top: BorderSide(
+                color: d ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
               ),
             ),
-            child: NavigationBar(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: d ? 0.3 : 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+          child: NavigationBar(
               selectedIndex: _currentIndex,
               onDestinationSelected: (i) {
                 _pageCtrl.animateToPage(i, duration: const Duration(milliseconds: 250), curve: Curves.easeOutCubic);

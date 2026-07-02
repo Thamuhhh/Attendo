@@ -102,42 +102,7 @@ class StaggeredList extends StatelessWidget {
     return ListView.builder(
       padding: padding,
       itemCount: itemCount,
-      itemBuilder: (ctx, i) => _StaggeredItem(index: i, child: itemBuilder(ctx, i)),
-    );
-  }
-}
-
-class _StaggeredItem extends StatefulWidget {
-  final int index;
-  final Widget child;
-  const _StaggeredItem({required this.index, required this.child});
-
-  @override
-  State<_StaggeredItem> createState() => _StaggeredItemState();
-}
-
-class _StaggeredItemState extends State<_StaggeredItem> with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _fade;
-  late Animation<Offset> _slide;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
-    _fade = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
-    _slide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
-    Future.delayed(Duration(milliseconds: 50 * (widget.index % 8)), _ctrl.forward);
-  }
-
-  @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fade,
-      child: SlideTransition(position: _slide, child: widget.child),
+      itemBuilder: itemBuilder,
     );
   }
 }
