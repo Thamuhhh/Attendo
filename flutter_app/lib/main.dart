@@ -59,7 +59,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     _warmingUp = false;
     if (mounted) setState(() {});
 
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
 
     setState(() => _initialized = true);
