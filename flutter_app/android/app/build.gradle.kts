@@ -41,7 +41,7 @@ android {
 
     buildTypes {
         debug {
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("debug")
         }
         release {
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
