@@ -271,7 +271,6 @@ class _ShellState extends ConsumerState<MainShell> {
             ),
           ),
         ),
-      ),
     );
   }
 }
@@ -335,11 +334,10 @@ class _DrawerItem extends StatelessWidget {
                       ),
                     ),
                 ],
-              ),
-            ),
           ),
         ),
       ),
     );
   }
+}
 }
