@@ -33,6 +33,12 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Build outputs
+android/build/
+
+# Generated flutter test screenshots
+flutter_*.png
+
 # Symbolication related
 app.*.symbols
 
