@@ -77,6 +77,36 @@ class _ShellState extends ConsumerState<MainShell> {
       );
   }
 
+  void _navigate(int index) {
+    Navigator.pop(context);
+    _pageCtrl.animateToPage(index, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic);
+    setState(() => _currentIndex = index);
+  }
+
+  void _openSettings() {
+    Navigator.pop(context);
+    Navigator.push(context, CustomRoute(page: const SettingsPage()));
+  }
+
+  void _confirmLogout() {
+    final d = AppTheme.isDark(context);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.cardColor(context),
+        title: Text(AppStrings.get('logout'), style: TextStyle(color: d ? Colors.white : AppTheme.textPrimary)),
+        content: Text(AppStrings.get('logout_confirm'), style: TextStyle(color: d ? Colors.grey.shade300 : AppTheme.textSecondary)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppStrings.get('cancel'), style: TextStyle(color: d ? Colors.grey.shade400 : Colors.grey.shade600))),
+          TextButton(
+            onPressed: () { Navigator.pop(ctx); _logout(); },
+            child: Text(AppStrings.get('logout'), style: const TextStyle(color: AppTheme.danger, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final d = AppTheme.isDark(context);
@@ -86,127 +116,104 @@ class _ShellState extends ConsumerState<MainShell> {
       extendBody: false,
       drawer: Drawer(
         backgroundColor: AppTheme.cardColor(context),
-        child: Container(
-          color: AppTheme.cardColor(context),
-          child: SafeArea(
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.fromLTRB(20, 40, 20, 24),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [AppTheme.primary, AppTheme.primaryDark],
-                      begin: Alignment(-0.2, -0.5),
-                      end: Alignment(0.8, 1.2),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 32, 20, 20),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppTheme.primary, AppTheme.primaryDark],
+                    begin: Alignment(-0.2, -0.5),
+                    end: Alignment(0.8, 1.2),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    GradientAvatar(
+                      name: AuthService.institutionName ?? 'Attendo',
+                      size: 48,
+                      fontSize: 20,
                     ),
-                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
-                  ),
-                  child: Row(
-                    children: [
-                      GradientAvatar(
-                        name: AuthService.institutionName ?? 'Attendo',
-                        size: 56,
-                        fontSize: 22,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AuthService.institutionName ?? AppStrings.get('my_institution'),
+                            style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w700),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            AuthService.institutionEmail ?? '',
+                            style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.7)),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AuthService.institutionName ?? AppStrings.get('my_institution'),
-                              style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w700),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              AuthService.institutionEmail ?? '',
-                              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.7)),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _DrawerItem(
-                  icon: Icons.dashboard_rounded,
-                  label: titles[0],
-                  isSelected: _currentIndex == 0,
-                  onTap: () { Navigator.pop(context); _pageCtrl.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic); setState(() => _currentIndex = 0); },
-                ),
-                _DrawerItem(
-                  icon: Icons.people_rounded,
-                  label: titles[1],
-                  isSelected: _currentIndex == 1,
-                  onTap: () { Navigator.pop(context); _pageCtrl.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic); setState(() => _currentIndex = 1); },
-                ),
-                _DrawerItem(
-                  icon: Icons.checklist_rounded,
-                  label: titles[2],
-                  isSelected: _currentIndex == 2,
-                  onTap: () { Navigator.pop(context); _pageCtrl.animateToPage(2, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic); setState(() => _currentIndex = 2); },
-                ),
-                _DrawerItem(
-                  icon: Icons.payments_rounded,
-                  label: titles[3],
-                  isSelected: _currentIndex == 3,
-                  onTap: () { Navigator.pop(context); _pageCtrl.animateToPage(3, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic); setState(() => _currentIndex = 3); },
-                ),
-                _DrawerItem(
-                  icon: Icons.bar_chart_rounded,
-                  label: titles[4],
-                  isSelected: _currentIndex == 4,
-                  onTap: () { Navigator.pop(context); _pageCtrl.animateToPage(4, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic); setState(() => _currentIndex = 4); },
-                ),
-                _DrawerItem(
-                  icon: Icons.settings_rounded,
-                  label: AppStrings.get('settings'),
-                  isSelected: false,
-                  onTap: () { Navigator.pop(context); Navigator.push(context, CustomRoute(page: const SettingsPage())); },
-                ),
-                const SizedBox(height: 8),
-                const Spacer(),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.greyShade(context, 200)),
-                  ),
-                  child: ListTile(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    leading: Container(
-                      width: 38, height: 38,
-                      decoration: BoxDecoration(
-                        color: AppTheme.danger.withValues(alpha: d ? 0.3 : 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.logout_rounded, color: AppTheme.danger, size: 20),
                     ),
-                    title: Text(AppStrings.get('logout'), style: TextStyle(color: d ? Colors.white : AppTheme.textPrimary, fontWeight: FontWeight.w600)),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          backgroundColor: AppTheme.cardColor(context),
-                          title: Text(AppStrings.get('logout'), style: TextStyle(color: d ? Colors.white : AppTheme.textPrimary)),
-                          content: Text(AppStrings.get('logout_confirm'), style: TextStyle(color: d ? Colors.grey.shade300 : AppTheme.textSecondary)),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppStrings.get('cancel'), style: TextStyle(color: d ? Colors.grey.shade400 : Colors.grey.shade600))),
-                            TextButton(
-                              onPressed: () { Navigator.pop(ctx); _logout(); },
-                              child: Text(AppStrings.get('logout'), style: const TextStyle(color: AppTheme.danger, fontWeight: FontWeight.w700)),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    _DrawerItem(
+                      icon: _filledIcons[0],
+                      label: titles[0],
+                      isSelected: _currentIndex == 0,
+                      onTap: () => _navigate(0),
+                    ),
+                    _DrawerItem(
+                      icon: _filledIcons[1],
+                      label: titles[1],
+                      isSelected: _currentIndex == 1,
+                      onTap: () => _navigate(1),
+                    ),
+                    _DrawerItem(
+                      icon: _filledIcons[2],
+                      label: titles[2],
+                      isSelected: _currentIndex == 2,
+                      onTap: () => _navigate(2),
+                    ),
+                    _DrawerItem(
+                      icon: _filledIcons[3],
+                      label: titles[3],
+                      isSelected: _currentIndex == 3,
+                      onTap: () => _navigate(3),
+                    ),
+                    _DrawerItem(
+                      icon: _filledIcons[4],
+                      label: titles[4],
+                      isSelected: _currentIndex == 4,
+                      onTap: () => _navigate(4),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      child: Divider(height: 1),
+                    ),
+                    _DrawerItem(
+                      icon: Icons.settings_rounded,
+                      label: AppStrings.get('settings'),
+                      isSelected: false,
+                      onTap: _openSettings,
+                    ),
+                  ],
+                ),
+              ),
+              _DrawerItem(
+                icon: Icons.logout_rounded,
+                label: AppStrings.get('logout'),
+                isSelected: false,
+                isLogout: true,
+                onTap: _confirmLogout,
+              ),
+              const SizedBox(height: 8),
+            ],
           ),
         ),
       ),
@@ -279,62 +286,80 @@ class _DrawerItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isSelected;
+  final bool isLogout;
   final VoidCallback onTap;
 
-  const _DrawerItem({required this.icon, required this.label, required this.isSelected, required this.onTap});
+  const _DrawerItem({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    this.isLogout = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final d = AppTheme.isDark(context);
+    final accent = isLogout ? AppTheme.danger : AppTheme.primary;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
-          gradient: isSelected
-              ? const LinearGradient(colors: [AppTheme.primary, AppTheme.primaryDark], begin: Alignment.centerLeft, end: Alignment.centerRight)
-              : null,
-          borderRadius: BorderRadius.circular(14),
-          color: isSelected ? null : Colors.transparent,
+          color: isSelected
+              ? accent.withValues(alpha: d ? 0.15 : 0.08)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
             onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38, height: 38,
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.white.withValues(alpha: 0.2) : AppTheme.primary.withValues(alpha: d ? 0.3 : 0.06),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(icon, size: 20, color: isSelected ? Colors.white : AppTheme.primary),
-                  ),
-                  const SizedBox(width: 14),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected ? Colors.white : (d ? Colors.grey.shade200 : AppTheme.textPrimary),
-                    ),
-                  ),
-                  const Spacer(),
-                  if (isSelected)
-                    Container(
-                      width: 6, height: 6,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
+            child: Stack(
+              children: [
+                if (isSelected)
+                  Positioned(
+                    left: 0, top: 8, bottom: 8,
+                    child: Container(
+                      width: 3,
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                ],
-              ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36, height: 36,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? accent.withValues(alpha: d ? 0.25 : 0.12)
+                              : accent.withValues(alpha: d ? 0.2 : 0.06),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icon, size: 19, color: isSelected ? accent : (d ? Colors.grey.shade300 : AppTheme.textSecondary)),
+                      ),
+                      const SizedBox(width: 14),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                          color: isSelected
+                              ? accent
+                              : (d ? Colors.grey.shade300 : AppTheme.textSecondary),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
