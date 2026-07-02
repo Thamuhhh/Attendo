@@ -95,9 +95,9 @@ class _ShellState extends ConsumerState<MainShell> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.cardColor(context),
         title: Text(AppStrings.get('logout'), style: TextStyle(color: d ? Colors.white : AppTheme.textPrimary)),
-        content: Text(AppStrings.get('logout_confirm'), style: TextStyle(color: d ? Colors.grey.shade300 : AppTheme.textSecondary)),
+        content: Text(AppStrings.get('logout_confirm'), style: TextStyle(color: d ? AppTheme.textSecondaryDark : AppTheme.textSecondary)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppStrings.get('cancel'), style: TextStyle(color: d ? Colors.grey.shade400 : Colors.grey.shade600))),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppStrings.get('cancel'), style: TextStyle(color: d ? AppTheme.greyShade(context, 400) : Colors.grey.shade600))),
           TextButton(
             onPressed: () { Navigator.pop(ctx); _logout(); },
             child: Text(AppStrings.get('logout'), style: const TextStyle(color: AppTheme.danger, fontWeight: FontWeight.w700)),
@@ -147,7 +147,7 @@ class _ShellState extends ConsumerState<MainShell> {
                             AuthService.institutionEmail ?? '',
                             style: TextStyle(
                               fontSize: 12,
-                              color: d ? Colors.grey.shade400 : AppTheme.textSecondary,
+                              color: d ? AppTheme.textSecondaryDark : AppTheme.textSecondary,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -343,7 +343,7 @@ class _DrawerItem extends StatelessWidget {
                               : accent.withValues(alpha: d ? 0.2 : 0.06),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(icon, size: 19, color: isSelected ? accent : (d ? Colors.grey.shade300 : AppTheme.textSecondary)),
+                        child: Icon(icon, size: 19, color: isSelected ? accent : (d ? AppTheme.greyShade(context, 400) : AppTheme.textSecondary)),
                       ),
                       const SizedBox(width: 14),
                       Text(
@@ -353,7 +353,7 @@ class _DrawerItem extends StatelessWidget {
                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                           color: isSelected
                               ? accent
-                              : (d ? Colors.grey.shade300 : AppTheme.textSecondary),
+                              : (d ? AppTheme.greyShade(context, 400) : AppTheme.textSecondary),
                         ),
                       ),
                     ],

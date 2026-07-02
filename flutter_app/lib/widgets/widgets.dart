@@ -359,7 +359,7 @@ class EmptyState extends StatelessWidget {
             if (subtitle != null) ...[
               const SizedBox(height: 8),
               Text(subtitle!, textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: d ? Colors.grey.shade400 : AppTheme.textSecondary, height: 1.4)),
+                style: TextStyle(fontSize: 14, color: d ? AppTheme.textSecondaryDark : AppTheme.textSecondary, height: 1.4)),
             ],
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 24),

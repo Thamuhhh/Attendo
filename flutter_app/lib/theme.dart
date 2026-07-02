@@ -10,11 +10,12 @@ class AppTheme {
   static const Color accent = Color(0xFF00C9A7);       // Mint teal
   static const Color accentLight = Color(0xFF5EFFE0);
   static const Color surface = Color(0xFFF0F2F8);
-  static const Color surfaceDark = Color(0xFF0D0D1A);
+  static const Color surfaceDark = Color(0xFF080812);
   static const Color cardBg = Colors.white;
-  static const Color cardBgDark = Color(0xFF1A1A2E);
+  static const Color cardBgDark = Color(0xFF13131F);
   static const Color textPrimary = Color(0xFF1A1A2E);
   static const Color textSecondary = Color(0xFF6B7280);
+  static const Color textSecondaryDark = Color(0xFF9CA3AF);
   static const Color success = Color(0xFF10B981);
   static const Color danger = Color(0xFFEF4444);
   static const Color warning = Color(0xFFF59E0B);
@@ -36,28 +37,28 @@ class AppTheme {
       }
     }
     switch (shade) {
-      case 50: return const Color(0xFF1F1F35);
-      case 100: return const Color(0xFF2A2A40);
-      case 200: return const Color(0xFF3A3A50);
-      case 300: return const Color(0xFF4A4A60);
-      case 400: return const Color(0xFF6B6B7E);
-      case 500: return const Color(0xFF8B8B9E);
-      case 600: return const Color(0xFF9B9BAE);
-      default: return const Color(0xFF3A3A50);
+      case 50: return const Color(0xFF191927);
+      case 100: return const Color(0xFF222233);
+      case 200: return const Color(0xFF2D2D42);
+      case 300: return const Color(0xFF3D3D55);
+      case 400: return const Color(0xFF5C5C78);
+      case 500: return const Color(0xFF7C7C9A);
+      case 600: return const Color(0xFFA0A0B8);
+      default: return const Color(0xFF2D2D42);
     }
   }
 
   static ThemeData get lightTheme {
-    return _baseTheme(surface, Colors.white, const Color(0xFFF0F2F5), const Color(0xFFD1D5DB));
+    return _baseTheme(surface, Colors.white, const Color(0xFFF0F2F5), const Color(0xFFD1D5DB), const Color(0xFFE5E7EB));
   }
 
   static ThemeData get darkTheme {
-    return _baseTheme(surfaceDark, cardBgDark, const Color(0xFF1F1F35), const Color(0xFF3A3A50));
+    return _baseTheme(surfaceDark, cardBgDark, const Color(0xFF1A1A2A), const Color(0xFF2A2A3E), const Color(0xFF2D2D42));
   }
 
   static TextTheme get _poppins => GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme);
 
-  static ThemeData _baseTheme(Color scaffoldBg, Color cardBg, Color inputFill, Color inputBorder) {
+  static ThemeData _baseTheme(Color scaffoldBg, Color cardBg, Color inputFill, Color inputBorder, Color dividerClr) {
     return ThemeData(
       useMaterial3: true,
       textTheme: _poppins,
@@ -133,7 +134,7 @@ class AppTheme {
         elevation: 6,
         shape: CircleBorder(),
       ),
-      dividerTheme: DividerThemeData(color: Colors.grey.shade200, thickness: 0.5, space: 1),
+      dividerTheme: DividerThemeData(color: dividerClr, thickness: 0.5, space: 1),
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         elevation: 0,
@@ -372,12 +373,12 @@ class AppTheme {
           const SizedBox(width: 14),
           Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: d ? Colors.white : textPrimary)),
         ]),
-        content: Text(message, style: TextStyle(fontSize: 14, color: d ? Colors.grey.shade300 : textSecondary, height: 1.5)),
+        content: Text(message, style: TextStyle(fontSize: 14, color: d ? textSecondaryDark : textSecondary, height: 1.5)),
         actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(AppStrings.get('cancel'), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: d ? Colors.grey.shade400 : Colors.grey.shade600)),
+            child: Text(AppStrings.get('cancel'), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: d ? const Color(0xFF5C5C78) : Colors.grey.shade600)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -449,7 +450,7 @@ class _ShimmerCardState extends State<ShimmerCard> with SingleTickerProviderStat
     return Container(
       width: w, height: h,
       decoration: BoxDecoration(
-        color: d ? const Color(0xFF3A3A50) : Colors.grey.shade200,
+        color: d ? const Color(0xFF2D2D42) : Colors.grey.shade200,
         borderRadius: BorderRadius.circular(h / 2),
       ),
     );

@@ -156,7 +156,7 @@ class _StudentsPageState extends State<StudentsPage> {
             child: Container(
               width: 52, height: 52,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [AppTheme.accent, Color(0xFF5EFFE0)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                gradient: const LinearGradient(colors: [AppTheme.accent, AppTheme.accentLight], begin: Alignment.topLeft, end: Alignment.bottomRight),
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [BoxShadow(color: AppTheme.accent.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))],
               ),
@@ -209,7 +209,7 @@ class _StudentsPageState extends State<StudentsPage> {
                           background: Container(
                             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(colors: [AppTheme.danger, Color(0xFFEF4444)], begin: Alignment.centerLeft, end: Alignment.centerRight),
+                              gradient: const LinearGradient(colors: [AppTheme.danger, AppTheme.danger], begin: Alignment.centerLeft, end: Alignment.centerRight),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             alignment: Alignment.centerRight,

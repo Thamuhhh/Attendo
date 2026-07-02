@@ -89,13 +89,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with SingleTickerPr
                       _divider(),
                       _SettingTile(
                         icon: Icons.notifications_rounded,
-                        iconColor: Colors.green,
+                        iconColor: AppTheme.primary,
                         title: AppStrings.get('daily_reminder'),
                         trailing: Switch(
                           value: settings.notificationsEnabled,
                           onChanged: (_) { ref.read(settingsProvider.notifier).toggleNotifications(); setState(() {}); },
-                          activeColor: Colors.green,
-                          activeTrackColor: Colors.green.withValues(alpha: 0.3),
+                          activeColor: AppTheme.primary,
+                          activeTrackColor: AppTheme.primary.withValues(alpha: 0.3),
                         ),
                       ),
                       _divider(),
@@ -172,9 +172,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with SingleTickerPr
                       _divider(),
                       _SettingTile(
                         icon: Icons.code_rounded,
-                        iconColor: Colors.blueGrey,
+                        iconColor: AppTheme.textSecondary,
                         title: AppStrings.get('developer'),
-                        trailing: Text('@anomaly', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: d ? Colors.grey.shade400 : AppTheme.textSecondary)),
+                        trailing: Text('@anomaly', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: d ? AppTheme.textSecondaryDark : AppTheme.textSecondary)),
                       ),
                       _divider(),
                       _SettingTile(
@@ -220,7 +220,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> with SingleTickerPr
               Text(name, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: d ? Colors.white : AppTheme.textPrimary)),
               if (email.isNotEmpty) ...[
                 const SizedBox(height: 4),
-                Text(email, style: TextStyle(fontSize: 13, color: d ? Colors.grey.shade400 : AppTheme.textSecondary)),
+                Text(email, style: TextStyle(fontSize: 13, color: d ? AppTheme.textSecondaryDark : AppTheme.textSecondary)),
               ],
             ],
           ),
@@ -423,7 +423,7 @@ class _SettingTile extends StatelessWidget {
           title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: d ? Colors.white : AppTheme.textPrimary)),
           subtitle: subtitle,
           trailing: showArrow
-              ? Icon(Icons.chevron_right_rounded, color: d ? Colors.grey.shade500 : Colors.grey.shade400, size: 22)
+              ? Icon(Icons.chevron_right_rounded, color: d ? AppTheme.greyShade(context, 500) : Colors.grey.shade400, size: 22)
               : trailing,
           contentPadding: const EdgeInsets.symmetric(horizontal: 10),
           minVerticalPadding: 8,

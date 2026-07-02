@@ -85,10 +85,10 @@ class _RemindersPageState extends ConsumerState<RemindersPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.notifications_off_rounded, size: 64,
-                            color: d ? Colors.grey.shade600 : Colors.grey.shade300),
+                            color: d ? AppTheme.greyShade(context, 600) : AppTheme.greyShade(context, 300)),
                           const SizedBox(height: 16),
                           Text('No reminders yet', style: TextStyle(
-                            fontSize: 16, color: d ? Colors.grey.shade400 : Colors.grey.shade500)),
+                            fontSize: 16, color: d ? AppTheme.greyShade(context, 400) : AppTheme.greyShade(context, 500))),
                           const SizedBox(height: 24),
                           ElevatedButton.icon(
                             icon: const Icon(Icons.add_rounded),
@@ -151,7 +151,7 @@ class _RemindersPageState extends ConsumerState<RemindersPage> {
                       const SizedBox(height: 2),
                       Text(_daysLabel(p), style: TextStyle(
                         fontSize: 12,
-                        color: d ? Colors.grey.shade400 : AppTheme.textSecondary)),
+                        color: d ? AppTheme.textSecondaryDark : AppTheme.textSecondary)),
                       if (p.smartEnabled)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
@@ -276,7 +276,7 @@ class _ReminderFormState extends State<_ReminderForm> {
             margin: const EdgeInsets.only(top: 12),
             width: 40, height: 4,
             decoration: BoxDecoration(
-              color: d ? Colors.grey.shade600 : Colors.grey.shade300,
+              color: d ? AppTheme.greyShade(context, 600) : AppTheme.greyShade(context, 300),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -334,7 +334,7 @@ class _ReminderFormState extends State<_ReminderForm> {
                 const SizedBox(height: 16),
                 Text('Repeat on', style: TextStyle(
                   fontWeight: FontWeight.w600, fontSize: 14,
-                  color: d ? Colors.grey.shade300 : AppTheme.textSecondary)),
+                  color: d ? AppTheme.textSecondaryDark : AppTheme.textSecondary)),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8, runSpacing: 8,
@@ -351,7 +351,7 @@ class _ReminderFormState extends State<_ReminderForm> {
                       selectedColor: AppTheme.primary,
                       checkmarkColor: Colors.white,
                       onSelected: (_) => _toggleDay(flag),
-                      backgroundColor: d ? Colors.grey.shade800 : Colors.grey.shade100,
+                      backgroundColor: d ? AppTheme.greyShade(context, 200) : Colors.grey.shade100,
                     );
                   }),
                 ),
@@ -369,12 +369,12 @@ class _ReminderFormState extends State<_ReminderForm> {
                             Text('Smart Detection',
                               style: TextStyle(fontWeight: FontWeight.w600,
                                 fontSize: 14,
-                                color: d ? Colors.grey.shade300 : AppTheme.textSecondary)),
+                                color: d ? AppTheme.textSecondaryDark : AppTheme.textSecondary)),
                           ]),
                           const SizedBox(height: 4),
                           Text('Notify if attendance missing',
                             style: TextStyle(fontSize: 12,
-                              color: d ? Colors.grey.shade500 : AppTheme.textSecondary)),
+                              color: d ? AppTheme.greyShade(context, 500) : AppTheme.textSecondary)),
                         ],
                       ),
                     ),
@@ -390,12 +390,12 @@ class _ReminderFormState extends State<_ReminderForm> {
                   const SizedBox(height: 12),
                   Row(children: [
                     Text('Gap threshold: ', style: TextStyle(
-                      color: d ? Colors.grey.shade300 : AppTheme.textSecondary)),
+                      color: d ? AppTheme.textSecondaryDark : AppTheme.textSecondary)),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: d ? Colors.grey.shade800 : Colors.grey.shade100,
+                        color: d ? AppTheme.greyShade(context, 200) : Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(

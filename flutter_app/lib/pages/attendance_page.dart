@@ -335,7 +335,7 @@ class _AttendancePageState extends State<AttendancePage> {
                                     width: 48, height: 48,
                                     decoration: BoxDecoration(
                                       gradient: ip
-                                          ? const LinearGradient(colors: [AppTheme.success, Color(0xFF059669)], begin: Alignment.topLeft, end: Alignment.bottomRight)
+                                          ? LinearGradient(colors: [AppTheme.success, AppTheme.success.withValues(alpha: 0.8)], begin: Alignment.topLeft, end: Alignment.bottomRight)
                                           : null,
                                       color: ip ? null : AppTheme.greyShade(context, 100),
                                       borderRadius: BorderRadius.circular(14),
@@ -343,7 +343,7 @@ class _AttendancePageState extends State<AttendancePage> {
                                     ),
                                     child: Icon(
                                       ip ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                                      color: ip ? Colors.white : Colors.grey,
+                                      color: ip ? Colors.white : AppTheme.greyShade(context, 400),
                                       size: ip ? 28 : 24,
                                     ),
                                   ),
@@ -386,7 +386,7 @@ class _AttendancePageState extends State<AttendancePage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: Colors.grey.shade300,
+                  disabledBackgroundColor: AppTheme.greyShade(context, 200),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 0,
                 ),
