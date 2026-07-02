@@ -334,6 +334,8 @@ class _DrawerItem extends StatelessWidget {
                       ),
                     ),
                 ],
+              ),
+            ),
           ),
         ),
       ),
