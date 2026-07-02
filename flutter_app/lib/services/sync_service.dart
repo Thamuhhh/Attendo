@@ -12,7 +12,7 @@ class SyncService {
   static bool _syncing = false;
   static bool _isOnline = true;
   static void Function(bool)? onStatusChanged;
-  static void Function(String)? onSyncProgress;
+  static void Function(String?)? onSyncProgress;
 
   static const int _maxRetries = 5;
   static final Map<int, int> _retryCount = {};
