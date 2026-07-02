@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     defaults:
       run:
@@ -42,14 +44,12 @@ jobs:
           name: attendo-debug-apk
           path: flutter_app/build/app/outputs/flutter-apk/*.apk
 
-      - name: Get version
-        id: version
-        run: echo "tag=v$(grep '^version:' pubspec.yaml | awk '{print $2}')" >> $GITHUB_OUTPUT
-
       - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: Release ${{ steps.version.outputs.tag }}
-          files: flutter_app/build/app/outputs/flutter-apk/*.apk
-          generate_release_notes: true
+        run: |
+          TAG="v$(grep '^version:' pubspec.yaml | awk '{print $2}')"
+          gh release create "$TAG" \
+            build/app/outputs/flutter-apk/*.apk \
+            --title "Release $TAG" \
+            --notes "Auto-built debug APK for $TAG"
+        env:
+          GH_TOKEN: ${{ github.token }}
