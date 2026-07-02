@@ -17,7 +17,7 @@ class OfflineDb {
     final path = p.join(dbPath, 'attendo_offline.db');
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE pending_attendance (
@@ -25,6 +25,8 @@ class OfflineDb {
             date TEXT NOT NULL,
             records TEXT NOT NULL,
             synced INTEGER NOT NULL DEFAULT 0,
+            retry_count INTEGER NOT NULL DEFAULT 0,
+            last_error TEXT,
             created_at TEXT NOT NULL
           )
         ''');
@@ -33,6 +35,10 @@ class OfflineDb {
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           await _createRemindersTable(db);
+        }
+        if (oldVersion < 3) {
+          try { await db.execute('ALTER TABLE pending_attendance ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
+          try { await db.execute('ALTER TABLE pending_attendance ADD COLUMN last_error TEXT'); } catch (_) {}
         }
       },
     );
@@ -65,8 +71,21 @@ class OfflineDb {
       'date': date,
       'records': jsonEncode(records),
       'synced': 0,
+      'retry_count': 0,
       'created_at': DateTime.now().toIso8601String(),
     });
+  }
+
+  static Future<void> incrementRetry(int id, String? error) async {
+    final db = await database;
+    final rows = await db.query('pending_attendance', columns: ['retry_count'], where: 'id = ?', whereArgs: [id]);
+    if (rows.isEmpty) return;
+    final count = (rows.first['retry_count'] as int? ?? 0) + 1;
+    await db.update(
+      'pending_attendance',
+      {'retry_count': count, 'last_error': error},
+      where: 'id = ?', whereArgs: [id],
+    );
   }
 
   static Future<List<Map<String, dynamic>>> getUnsyncedRecords() async {

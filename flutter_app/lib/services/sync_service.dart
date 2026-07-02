@@ -12,6 +12,10 @@ class SyncService {
   static bool _syncing = false;
   static bool _isOnline = true;
   static void Function(bool)? onStatusChanged;
+  static void Function(String)? onSyncProgress;
+
+  static const int _maxRetries = 5;
+  static final Map<int, int> _retryCount = {};
 
   static bool get isOnline => _isOnline;
 
@@ -45,9 +49,20 @@ class SyncService {
     _syncing = true;
     try {
       final pending = await OfflineDb.getUnsyncedRecords();
-      for (final row in pending) {
+      if (pending.isEmpty) { _resetRetries(); return; }
+
+      for (int i = 0; i < pending.length; i++) {
+        final row = pending[i];
+        final id = row['id'] as int;
+
+        final retries = _retryCount[id] ?? 0;
+        if (retries >= _maxRetries) {
+          _retryCount.remove(id);
+          continue;
+        }
+
         try {
-          final id = row['id'] as int;
+          onSyncProgress?.call('Syncing ${i + 1} of ${pending.length}...');
           final date = row['date'] as String;
           final records = jsonDecode(row['records'] as String) as List;
           final res = await http.post(
@@ -57,13 +72,33 @@ class SyncService {
           ).timeout(const Duration(seconds: 60));
           if (res.statusCode == 200 || res.statusCode == 201) {
             await OfflineDb.markSynced(id);
+            _retryCount.remove(id);
             ApiService.clearCache();
+          } else {
+            _retryCount[id] = retries + 1;
           }
-        } catch (_) {}
+        } catch (_) {
+          _retryCount[id] = retries + 1;
+          if (_retryCount[id]! < _maxRetries) {
+            await Future.delayed(Duration(seconds: _backoff(retries)));
+          }
+          rethrow;
+        }
       }
     } finally {
       _syncing = false;
+      onSyncProgress?.call(null);
     }
+  }
+
+  static int _backoff(int attempt) {
+    const base = 2;
+    final delay = base * (1 << attempt);
+    return delay.clamp(2, 60);
+  }
+
+  static void _resetRetries() {
+    _retryCount.clear();
   }
 
   static Future<void> syncNow() async {

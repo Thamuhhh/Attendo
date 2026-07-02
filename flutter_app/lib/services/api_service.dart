@@ -7,13 +7,12 @@ import '../models/student.dart';
 import '../models/attendance_record.dart';
 import '../models/fee_record.dart';
 import 'auth_service.dart';
+import 'cache_service.dart';
 
 class ApiService {
   static String _customBase = '';
   static const String productionUrl = 'https://attendo-e4ts.onrender.com/api';
   static Timer? _keepAliveTimer;
-  static final Map<String, _CacheEntry> _cache = {};
-  static const Duration _cacheDuration = Duration(seconds: 30);
 
   static void startKeepAlive() {
     _keepAliveTimer?.cancel();
@@ -33,18 +32,7 @@ class ApiService {
     _keepAliveTimer = null;
   }
 
-  static Future<T> _cached<T>(String key, Future<T> Function() fetcher) async {
-    final now = DateTime.now();
-    final entry = _cache[key];
-    if (entry != null && now.difference(entry.time) < _cacheDuration) {
-      return entry.data as T;
-    }
-    final data = await fetcher();
-    _cache[key] = _CacheEntry(data, now);
-    return data;
-  }
-
-  static void clearCache() => _cache.clear();
+  static Future<void> clearCache() => CacheService.clear();
 
   static Future<String?> _offlineGet(String key) async {
     final prefs = await SharedPreferences.getInstance();
@@ -120,10 +108,12 @@ class ApiService {
   }
 
   static Future<TodayAttendance> getTodayAttendance() async {
-    return _cached<TodayAttendance>('today_attendance', () async {
-      final body = await _fetchRawWithFallback('today_attendance', '$baseUrl/attendance/today');
-      return TodayAttendance.fromJson(jsonDecode(body));
-    });
+    final cached = await CacheService.get<TodayAttendance>('today_attendance', (s) => TodayAttendance.fromJson(jsonDecode(s)));
+    if (cached != null) return cached;
+    final body = await _fetchRawWithFallback('today_attendance', '$baseUrl/attendance/today');
+    final data = TodayAttendance.fromJson(jsonDecode(body));
+    await CacheService.set('today_attendance', body, ttl: const Duration(seconds: 30));
+    return data;
   }
 
   static Future<List<AttendanceRecord>> getAttendanceByDate(String date) async {
@@ -148,10 +138,13 @@ class ApiService {
   }
 
   static Future<FeeSummary> getFeeSummary(int year) async {
-    return _cached<FeeSummary>('fee_summary_$year', () async {
-      final body = await _fetchRawWithFallback('fee_summary_$year', '$baseUrl/fees/summary?year=$year');
-      return FeeSummary.fromJson(jsonDecode(body));
-    });
+    final cacheKey = 'fee_summary_$year';
+    final cached = await CacheService.get<FeeSummary>(cacheKey, (s) => FeeSummary.fromJson(jsonDecode(s)));
+    if (cached != null) return cached;
+    final body = await _fetchRawWithFallback(cacheKey, '$baseUrl/fees/summary?year=$year');
+    final data = FeeSummary.fromJson(jsonDecode(body));
+    await CacheService.set(cacheKey, body, ttl: const Duration(minutes: 2));
+    return data;
   }
 
   static Future<List<FeeRecord>> getFeeRecords(String studentId, int year) async {
@@ -160,10 +153,12 @@ class ApiService {
   }
 
   static Future<List<Map<String, dynamic>>> getWeeklyAttendance() async {
-    return _cached<List<Map<String, dynamic>>>('weekly_attendance', () async {
-      final body = await _fetchRawWithFallback('weekly_attendance', '$baseUrl/attendance/weekly');
-      return (jsonDecode(body) as List).cast<Map<String, dynamic>>();
-    });
+    final cached = await CacheService.get<List<Map<String, dynamic>>>('weekly_attendance', (s) => (jsonDecode(s) as List).cast<Map<String, dynamic>>());
+    if (cached != null) return cached;
+    final body = await _fetchRawWithFallback('weekly_attendance', '$baseUrl/attendance/weekly');
+    final data = (jsonDecode(body) as List).cast<Map<String, dynamic>>();
+    await CacheService.set('weekly_attendance', body, ttl: const Duration(seconds: 30));
+    return data;
   }
 
   static Future<void> saveFees(List<Map<String, dynamic>> records) async {
@@ -220,11 +215,5 @@ class ApiService {
     if (res.statusCode == 200) return jsonDecode(res.body);
     throw Exception('Failed to get app version');
   }
-}
-
-class _CacheEntry {
-  final dynamic data;
-  final DateTime time;
-  _CacheEntry(this.data, this.time);
 }
 

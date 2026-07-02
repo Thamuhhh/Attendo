@@ -13,9 +13,11 @@ import 'providers/settings_provider.dart';
 import 'providers/auth_provider.dart';
 import 'l10n/strings.dart';
 import 'utils/app_version.dart';
+import 'widgets/error_boundary.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  AppErrorBoundary.init();
   runApp(const ProviderScope(child: MyApp()));
 }
 
