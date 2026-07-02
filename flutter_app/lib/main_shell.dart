@@ -120,14 +120,7 @@ class _ShellState extends ConsumerState<MainShell> {
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.fromLTRB(20, 32, 20, 20),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppTheme.primary, AppTheme.primaryDark],
-                    begin: Alignment(-0.2, -0.5),
-                    end: Alignment(0.8, 1.2),
-                  ),
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
                 child: Row(
                   children: [
                     GradientAvatar(
@@ -142,13 +135,20 @@ class _ShellState extends ConsumerState<MainShell> {
                         children: [
                           Text(
                             AuthService.institutionName ?? AppStrings.get('my_institution'),
-                            style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w700),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: d ? Colors.white : AppTheme.textPrimary,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
                           Text(
                             AuthService.institutionEmail ?? '',
-                            style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.7)),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: d ? Colors.grey.shade400 : AppTheme.textSecondary,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
