@@ -27,9 +27,6 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class _MyAppState extends ConsumerState<MyApp> {
-  bool _initialized = false;
-  bool _warmingUp = true;
-
   @override
   void initState() {
     super.initState();
@@ -37,32 +34,24 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   Future<void> _init() async {
-    final warmUpFuture = AuthService.isLoggedIn
-        ? ApiService.warmUp().timeout(const Duration(seconds: 30)).catchError((_) {})
-        : Future<void>.value();
-
     await Future.wait([
       NotificationService().initialize().catchError((_) {}),
       OfflineDb.database.then((_) {}).catchError((_) {}),
     ]);
-    SyncService.start();
     if (!mounted) return;
+
+    SyncService.start();
     ApiService.startKeepAlive();
+
     final enabled = await NotificationService().isEnabled;
     if (!mounted) return;
     if (enabled != ref.read(settingsProvider).notificationsEnabled) {
       ref.read(settingsProvider.notifier).toggleNotifications();
     }
 
-    await warmUpFuture;
-    if (!mounted) return;
-    _warmingUp = false;
-    if (mounted) setState(() {});
-
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (!mounted) return;
-
-    setState(() => _initialized = true);
+    if (AuthService.isLoggedIn) {
+      ApiService.warmUp().timeout(const Duration(seconds: 30)).catchError((_) {});
+    }
     NotificationService().scheduleAllReminders().catchError((_) {});
     _checkUpdate();
   }
@@ -154,149 +143,11 @@ class _MyAppState extends ConsumerState<MyApp> {
       title: 'Attendo',
       debugShowCheckedModeBanner: false,
       theme: settings.isDark ? AppTheme.darkTheme : AppTheme.lightTheme,
-      home: !_initialized
-        ? _Splash(connecting: _warmingUp)
-        : auth.isLoggedIn
-          ? const MainShell()
-          : const OnboardingPage(),
+      home: auth.isLoggedIn
+        ? const MainShell()
+        : const OnboardingPage(),
     );
   }
 }
 
-class _Splash extends StatefulWidget {
-  final bool connecting;
-  const _Splash({this.connecting = false});
-  @override
-  State<_Splash> createState() => _SplashState();
-}
 
-class _SplashState extends State<_Splash> with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _fade;
-  late Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
-    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
-    _scale = Tween<double>(begin: 0.6, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
-    _ctrl.forward();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment(-0.2, -0.5),
-            end: Alignment(0.8, 1.2),
-            colors: [AppTheme.primary, AppTheme.primaryDark],
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -100, right: -100,
-              child: Container(
-                width: 300, height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.03),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -80, left: -80,
-              child: Container(
-                width: 250, height: 250,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.03),
-                ),
-              ),
-            ),
-            Center(
-              child: FadeTransition(
-                opacity: _fade,
-                child: ScaleTransition(
-                  scale: _scale,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(28),
-                        child: Image.asset(
-                          'assets/images/splash_logo.jpg',
-                          width: 96, height: 96,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text('Attendo', style: TextStyle(
-                        fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white,
-                        letterSpacing: 1.5, wordSpacing: 2,
-                      )),
-                      const SizedBox(height: 8),
-                      Text('Attendance Tracker', style: TextStyle(
-                        fontSize: 15, color: Colors.white.withValues(alpha: 0.7),
-                        letterSpacing: 2, fontWeight: FontWeight.w300,
-                      )),
-                      const SizedBox(height: 40),
-                      SizedBox(
-                        width: 28, height: 28,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      AnimatedOpacity(
-                        opacity: widget.connecting ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 400),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 6, height: 6,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.green.withValues(alpha: 0.7),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.green.withValues(alpha: 0.3),
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              AppStrings.get('connecting'),
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.white.withValues(alpha: 0.7),
-                                letterSpacing: 1,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
