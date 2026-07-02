@@ -29,6 +29,9 @@ class NotificationService {
     await _plugin.initialize(settings: initSettings);
 
     tz.initializeTimeZones();
+
+    await _requestPermission();
+
     _initialized = true;
   }
 

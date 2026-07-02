@@ -63,7 +63,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     if (!mounted) return;
 
     setState(() => _initialized = true);
-    NotificationService().scheduleAllReminders();
+    NotificationService().scheduleAllReminders().catchError((_) {});
     _checkUpdate();
   }
 
@@ -231,20 +231,13 @@ class _SplashState extends State<_Splash> with SingleTickerProviderStateMixin {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 96, height: 96,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(28),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 30,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: Image.asset(
+                          'assets/images/splash_logo.jpg',
+                          width: 96, height: 96,
+                          fit: BoxFit.cover,
                         ),
-                        child: const Icon(Icons.school_rounded, size: 52, color: Colors.white),
                       ),
                       const SizedBox(height: 24),
                       const Text('Attendo', style: TextStyle(
