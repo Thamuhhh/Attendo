@@ -84,7 +84,7 @@ class _ShellState extends ConsumerState<MainShell> {
     final titles = _titles;
 
     return Scaffold(
-      extendBody: true,
+      extendBody: false,
       drawer: Drawer(
         backgroundColor: AppTheme.cardColor(context),
         child: Container(
@@ -222,7 +222,7 @@ class _ShellState extends ConsumerState<MainShell> {
           Expanded(
             child: PageView(
               controller: _pageCtrl,
-              physics: const BouncingScrollPhysics(),
+              physics: const PageScrollPhysics(),
               onPageChanged: (i) {
                 setState(() => _currentIndex = i);
                 if (i == 0) _dashboardKey.currentState?.load();

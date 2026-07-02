@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../theme.dart';
 
@@ -128,7 +127,7 @@ class _StaggeredItemState extends State<_StaggeredItem> with SingleTickerProvide
     _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
     _fade = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
     _slide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
-    Future.delayed(Duration(milliseconds: 50 * widget.index), _ctrl.forward);
+    Future.delayed(Duration(milliseconds: 50 * (widget.index % 8)), _ctrl.forward);
   }
 
   @override
@@ -223,10 +222,9 @@ class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
-  final double blur;
   final bool hasBorder;
 
-  const GlassCard({super.key, required this.child, this.padding, this.margin, this.blur = 16, this.hasBorder = true});
+  const GlassCard({super.key, required this.child, this.padding, this.margin, this.hasBorder = true});
 
   @override
   Widget build(BuildContext context) {
@@ -260,10 +258,7 @@ class GlassCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: Padding(padding: padding ?? const EdgeInsets.all(16), child: child),
-        ),
+        child: Padding(padding: padding ?? const EdgeInsets.all(16), child: child),
       ),
     );
   }
