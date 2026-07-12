@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'theme.dart';
 import 'services/auth_service.dart';
 import 'services/api_service.dart';
@@ -13,6 +14,7 @@ import 'pages/settings_page.dart';
 import 'l10n/strings.dart';
 import 'providers/auth_provider.dart';
 import 'widgets/widgets.dart';
+import 'utils/app_version.dart';
 
 class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key});
@@ -39,6 +41,82 @@ class _ShellState extends ConsumerState<MainShell> {
       const FeesPage(),
       const ReportPage(),
     ];
+    _checkUpdate();
+  }
+
+  Future<void> _checkUpdate() async {
+    try {
+      final data = await ApiService.getAppVersion();
+      final remoteVer = data['version'] as String? ?? '1.0.0';
+      final apkUrl = data['apkUrl'] as String? ?? '';
+      final forceUpdate = data['forceUpdate'] as bool? ?? false;
+      if (remoteVer.isEmpty || apkUrl.isEmpty) return;
+      if (!AppVersion.isNewer(remoteVer)) return;
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: !forceUpdate,
+        builder: (ctx) => PopScope(
+          canPop: !forceUpdate,
+          child: AlertDialog(
+            title: Row(children: [
+              const Icon(Icons.system_update_rounded, color: AppTheme.primary),
+              const SizedBox(width: 10),
+              Text(forceUpdate ? 'Update Required' : 'Update Available'),
+            ]),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Version $remoteVer is available. You have ${AppVersion.current}.'),
+                if (forceUpdate) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.danger.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(children: [
+                      Icon(Icons.warning_amber_rounded, size: 18, color: AppTheme.danger),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'This update is mandatory. Please update to continue using the app.',
+                          style: TextStyle(fontSize: 13, color: AppTheme.danger),
+                        ),
+                      ),
+                    ]),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              if (!forceUpdate)
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Later'),
+                ),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.download_rounded, size: 18),
+                label: const Text('Update'),
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  final uri = Uri.parse(apkUrl);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } catch (_) {}
   }
 
   List<String> get _titles => [
