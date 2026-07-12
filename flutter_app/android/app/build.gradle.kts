@@ -4,10 +4,11 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.tuition.attendance_app"
+    namespace = "com.attendo_app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -18,9 +19,10 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.tuition.attendance_app"
+        applicationId = "com.attendo_app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
+        multiDexEnabled = true
         versionCode = (System.getenv("BUILD_NUMBER") ?: flutter.versionCode.toString()).toInt()
         versionName = System.getenv("BUILD_NAME") ?: flutter.versionName
     }

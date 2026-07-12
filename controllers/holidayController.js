@@ -1,35 +1,28 @@
-const Holiday = require('../models/Holiday');
-const { instFilter } = require('../utils/helpers');
+const holidayService = require('../services/holidayService');
 
-exports.list = async (req, res) => {
+exports.list = async (req, res, next) => {
   try {
-    const holidays = await Holiday.find(instFilter(req)).sort({ date: 1 }).lean();
+    const holidays = await holidayService.list(req);
     res.json(holidays.map(h => h.date));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-exports.create = async (req, res) => {
+exports.create = async (req, res, next) => {
   try {
-    const { date, name } = req.body;
-    if (!date) return res.status(400).json({ error: 'Date required' });
-    const existing = await Holiday.findOne(instFilter(req, { date }));
-    if (existing) return res.json(existing);
-    const holiday = await new Holiday({
-      date, name: name || 'Holiday', institutionId: req.institution._id.toString()
-    }).save();
+    const holiday = await holidayService.create(req, req.body);
     res.json(holiday);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
-exports.remove = async (req, res) => {
+exports.remove = async (req, res, next) => {
   try {
-    await Holiday.findOneAndDelete(instFilter(req, { date: req.params.date }));
+    await holidayService.remove(req, req.params.date);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };

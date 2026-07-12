@@ -1,11 +1,20 @@
 const mongoose = require('mongoose');
+const config = require('./config');
+const logger = require('./utils/logger');
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://<user>:<pass>@cluster0.xxxxx.mongodb.net/attendo?retryWrites=true&w=majority';
-
-mongoose.connect(MONGO_URI).then(() => {
-  console.log('MongoDB connected');
+mongoose.connect(config.mongoUri).then(() => {
+  logger.info('MongoDB connected');
 }).catch(err => {
-  console.error('MongoDB connection error:', err.message);
+  logger.error('MongoDB connection error:', err.message);
+  process.exit(1);
+});
+
+mongoose.connection.on('disconnected', () => {
+  logger.warn('MongoDB disconnected');
+});
+
+mongoose.connection.on('error', (err) => {
+  logger.error('MongoDB error', { error: err.message });
 });
 
 module.exports = mongoose;

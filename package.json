@@ -1,11 +1,17 @@
 {
   "name": "attendence",
-  "version": "1.0.1",
-  "description": "",
+  "version": "2.0.0",
+  "description": "Attendo - Attendance Management System API",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch index.js",
+    "test": "jest --forceExit --detectOpenHandles",
+    "test:watch": "jest --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [],
   "author": "",
@@ -17,8 +23,34 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
+    "firebase-admin": "^13.4.0",
+    "helmet": "^8.1.0",
+    "ioredis": "^5.7.0",
     "joi": "^18.2.3",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.7.0",
-    "morgan": "^1.11.0"
+    "morgan": "^1.11.0",
+    "nodemailer": "^7.0.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "twilio": "^5.7.0",
+    "uuid": "^11.1.0",
+    "winston": "^3.18.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "eslint": "^9.29.0",
+    "jest": "^30.0.4",
+    "prettier": "^3.5.3",
+    "supertest": "^7.1.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
   }
 }

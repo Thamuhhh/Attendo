@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'firebase_options.dart';
 import 'theme.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
+import 'services/push_notification_service.dart';
 import 'services/api_service.dart';
 import 'services/offline_db.dart';
 import 'services/sync_service.dart';
@@ -15,8 +18,11 @@ import 'l10n/strings.dart';
 import 'utils/app_version.dart';
 import 'widgets/error_boundary.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   AppErrorBoundary.init();
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -38,6 +44,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   Future<void> _init() async {
     await Future.wait([
       NotificationService().initialize().catchError((_) {}),
+      PushNotificationService().initialize().catchError((_) {}),
       OfflineDb.database.then((_) {}).catchError((_) {}),
     ]);
     if (!mounted) return;
@@ -52,6 +59,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     }
 
     if (AuthService.isLoggedIn) {
+      PushNotificationService().sendTokenToServer().catchError((_) {});
       ApiService.warmUp().timeout(const Duration(seconds: 30)).catchError((_) {});
     }
     NotificationService().scheduleAllReminders().catchError((_) {});

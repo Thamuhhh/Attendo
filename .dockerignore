@@ -1,0 +1,10 @@
+node_modules
+.git
+build
+logs
+*.log
+.env
+coverage
+flutter_app
+.github
+.render.yaml

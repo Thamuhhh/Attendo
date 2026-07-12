@@ -1,0 +1,7 @@
+node_modules/
+flutter_app/
+build/
+logs/
+*.log
+.env
+coverage/
