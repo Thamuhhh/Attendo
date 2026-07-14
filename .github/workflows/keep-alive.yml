@@ -1,4 +1,4 @@
-name: Keep Backend Alive
+name: Keep Alive
 
 on:
   schedule:
@@ -9,5 +9,6 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Render backend
-        run: curl -s -o /dev/null -w "%{http_code}" https://attendo-e4ts.onrender.com/api
+      - name: Ping server
+        run: |
+          curl -s --max-time 30 https://attendo-e4ts.onrender.com/api/health || true
