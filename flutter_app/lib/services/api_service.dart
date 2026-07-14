@@ -82,7 +82,9 @@ class ApiService {
 
   static Future<List<Student>> getStudents() async {
     final body = await _fetchRawWithFallback('students', '$baseUrl/students');
-    return (jsonDecode(body) as List).map((e) => Student.fromJson(e)).toList();
+    final list = jsonDecode(body);
+    if (list is! List) return [];
+    return list.whereType<Map<String, dynamic>>().map((e) => Student.fromJson(e)).toList();
   }
 
   static Future<Student> addStudent(String name, String phone) async {
@@ -122,7 +124,9 @@ class ApiService {
 
   static Future<List<AttendanceRecord>> getAttendanceByDate(String date) async {
     final body = await _fetchRawWithFallback('attendance_$date', '$baseUrl/attendance?date=$date');
-    return (jsonDecode(body) as List).map((e) => AttendanceRecord.fromJson(e)).toList();
+    final list = jsonDecode(body);
+    if (list is! List) return [];
+    return list.whereType<Map<String, dynamic>>().map((e) => AttendanceRecord.fromJson(e)).toList();
   }
 
   static Future<void> saveAttendance(String date, List<Map<String, dynamic>> records) async {
@@ -161,14 +165,21 @@ class ApiService {
 
   static Future<List<FeeRecord>> getFeeRecords(String studentId, int year) async {
     final body = await _fetchRawWithFallback('fees_${studentId}_$year', '$baseUrl/fees?studentId=$studentId&year=$year');
-    return (jsonDecode(body) as List).map((e) => FeeRecord.fromJson(e)).toList();
+    final list = jsonDecode(body);
+    if (list is! List) return [];
+    return list.whereType<Map<String, dynamic>>().map((e) => FeeRecord.fromJson(e)).toList();
   }
 
   static Future<List<Map<String, dynamic>>> getWeeklyAttendance() async {
-    final cached = await CacheService.get<List<Map<String, dynamic>>>('weekly_attendance', (s) => (jsonDecode(s) as List).cast<Map<String, dynamic>>());
+    final cached = await CacheService.get<List<Map<String, dynamic>>>('weekly_attendance', (s) {
+      final list = jsonDecode(s);
+      if (list is! List) return <Map<String, dynamic>>[];
+      return list.whereType<Map<String, dynamic>>().toList();
+    });
     if (cached != null) return cached;
     final body = await _fetchRawWithFallback('weekly_attendance', '$baseUrl/attendance/weekly');
-    final data = (jsonDecode(body) as List).cast<Map<String, dynamic>>();
+    final list = jsonDecode(body);
+    final data = list is List ? list.whereType<Map<String, dynamic>>().toList() : <Map<String, dynamic>>[];
     await CacheService.set('weekly_attendance', body, ttl: const Duration(seconds: 30));
     return data;
   }
@@ -193,7 +204,9 @@ class ApiService {
 
   static Future<List<String>> getHolidays() async {
     final body = await _fetchRawWithFallback('holidays', '$baseUrl/holidays');
-    return (jsonDecode(body) as List).cast<String>();
+    final list = jsonDecode(body);
+    if (list is! List) return [];
+    return list.whereType<String>().toList();
   }
 
   static Future<void> addHoliday(String date) async {
@@ -225,7 +238,9 @@ class ApiService {
     String url = '$baseUrl/attendance/history/$studentId';
     if (year != null && month != null) url += '?year=$year&month=$month';
     final body = await _fetchRawWithFallback('att_history_$studentId', url);
-    return (jsonDecode(body) as List).cast<Map<String, dynamic>>();
+    final list = jsonDecode(body);
+    if (list is! List) return [];
+    return list.whereType<Map<String, dynamic>>().toList();
   }
 
   static Future<Map<String, dynamic>> getAppVersion() async {

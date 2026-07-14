@@ -34,12 +34,13 @@ class AuthService {
   }
 
   static Map<String, dynamic> _parseAuthResponse(Map<String, dynamic> data) {
-    final accessToken = (data['accessToken'] ?? data['token']) as String?;
-    final refreshToken = data['refreshToken'] as String?;
-    final inst = data['institution'] as Map<String, dynamic>?;
-    final instId = inst?['id'] as String? ?? inst?['_id'] as String? ?? '';
-    final instName = inst?['name'] as String? ?? '';
-    final instEmail = inst?['email'] as String? ?? '';
+    final accessToken = (data['accessToken'] ?? data['token'])?.toString();
+    final refreshToken = data['refreshToken']?.toString();
+    final inst = data['institution'];
+    final instMap = inst is Map<String, dynamic> ? inst : <String, dynamic>{};
+    final instId = instMap['id']?.toString() ?? instMap['_id']?.toString() ?? '';
+    final instName = instMap['name']?.toString() ?? '';
+    final instEmail = instMap['email']?.toString() ?? '';
     if (accessToken == null || accessToken.isEmpty) {
       throw Exception('Login failed: invalid server response');
     }
@@ -157,9 +158,12 @@ class AuthService {
           .timeout(const Duration(seconds: 15));
 
       if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        _token = data['accessToken'];
-        _refreshToken = data['refreshToken'];
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        final newToken = data['accessToken'] as String?;
+        final newRefresh = data['refreshToken'] as String?;
+        if (newToken == null || newToken.isEmpty) return false;
+        _token = newToken;
+        _refreshToken = newRefresh ?? _refreshToken;
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_tokenKey, _token!);
         await prefs.setString(_refreshTokenKey, _refreshToken!);

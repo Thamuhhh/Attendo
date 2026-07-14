@@ -77,8 +77,8 @@ class _PersistedEntry {
 
   factory _PersistedEntry.fromJson(Map<String, dynamic> json) {
     return _PersistedEntry(
-      json: json['json'] as String,
-      expiry: DateTime.parse(json['expiry'] as String),
+      json: json['json']?.toString() ?? '',
+      expiry: DateTime.tryParse(json['expiry']?.toString() ?? '') ?? DateTime.now(),
     );
   }
 
