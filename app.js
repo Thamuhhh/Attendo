@@ -37,8 +37,17 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later' },
+  skip: (req) => req.path === '/health' || req.path === '/app/version' || req.path === '/' || req.path === '/docs.json',
 });
 app.use('/api/', limiter);
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts, please try again later' },
+});
 
 const swaggerOptions = {
   definition: {
@@ -74,14 +83,20 @@ app.get('/api/docs.json', (req, res) => {
   res.send(swaggerSpec);
 });
 
-app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/auth', (req, res, next) => {
+  if (req.path === '/login' || req.path === '/register') return loginLimiter(req, res, next);
+  next();
+}, authRoutes);
 app.use('/api/v1/students', studentRoutes);
 app.use('/api/v1/attendance', attendanceRoutes);
 app.use('/api/v1/fees', feeRoutes);
 app.use('/api/v1/holidays', holidayRoutes);
 app.use('/api/v1/reports', reportRoutes);
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', (req, res, next) => {
+  if (req.path === '/login' || req.path === '/register') return loginLimiter(req, res, next);
+  next();
+}, authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/fees', feeRoutes);

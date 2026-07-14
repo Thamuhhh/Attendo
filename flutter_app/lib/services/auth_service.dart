@@ -81,13 +81,24 @@ class AuthService {
   }
 
   static Future<bool> login(String email, String password) async {
-    final res = await http
+    var res = await http
         .post(
           Uri.parse('${ApiService.baseUrl}/auth/login'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'email': email, 'password': password}),
         )
         .timeout(const Duration(seconds: 60));
+
+    if (res.statusCode == 429) {
+      await Future.delayed(const Duration(seconds: 5));
+      res = await http
+          .post(
+            Uri.parse('${ApiService.baseUrl}/auth/login'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email, 'password': password}),
+          )
+          .timeout(const Duration(seconds: 60));
+    }
 
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body) as Map<String, dynamic>;
@@ -192,6 +203,10 @@ class AuthService {
       if (refreshed) {
         response = await request();
       }
+    }
+    if (response.statusCode == 429) {
+      await Future.delayed(const Duration(seconds: 5));
+      response = await request();
     }
     return response;
   }

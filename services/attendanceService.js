@@ -46,23 +46,16 @@ async function save(req, { date, records }) {
 
   const bulkOps = [];
   for (const rec of records) {
-    if (existingMap[rec.studentId]) {
-      bulkOps.push({
-        updateOne: {
-          filter: { _id: existingMap[rec.studentId]._id },
-          update: { $set: { status: rec.status } },
-        },
-      });
-    } else {
-      bulkOps.push({
-        insertOne: {
-          document: { studentId: rec.studentId, institutionId: instId, date: attDate, status: rec.status },
-        },
-      });
-    }
+    bulkOps.push({
+      updateOne: {
+        filter: { studentId: rec.studentId, institutionId: instId, date: attDate },
+        update: { $set: { status: rec.status } },
+        upsert: true,
+      },
+    });
   }
 
-  if (bulkOps.length > 0) await Attendance.bulkWrite(bulkOps);
+  if (bulkOps.length > 0) await Attendance.bulkWrite(bulkOps, { ordered: false });
 
   const updated = await Attendance.find(instFilter(req, { date: attDate })).lean();
 
@@ -75,18 +68,14 @@ async function save(req, { date, records }) {
 
   for (const rec of records) {
     const studentName = studentMap[rec.studentId] || 'Unknown';
-    try {
-      if (institution) {
-        sendAttendanceNotification(institution, studentName, attDate, rec.status).catch(() => {});
-      }
-      if (institution && institution.email) {
-        sendAttendanceAlert(institution.email, studentName, attDate, rec.status).catch(() => {});
-      }
-      if (institution && institution.phone) {
-        sendAttendanceSMS(institution.phone, studentName, attDate, rec.status).catch(() => {});
-      }
-    } catch (_e) {
-      logger.warn('Notification failed for student', { studentId: rec.studentId });
+    if (institution) {
+      sendAttendanceNotification(institution, studentName, attDate, rec.status).catch(() => {});
+    }
+    if (institution && institution.email) {
+      sendAttendanceAlert(institution.email, studentName, attDate, rec.status).catch(() => {});
+    }
+    if (institution && institution.phone) {
+      sendAttendanceSMS(institution.phone, studentName, attDate, rec.status).catch(() => {});
     }
   }
 

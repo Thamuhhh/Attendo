@@ -16,7 +16,7 @@ class ApiService {
 
   static void startKeepAlive() {
     _keepAliveTimer?.cancel();
-    _keepAliveTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+    _keepAliveTimer = Timer.periodic(const Duration(minutes: 15), (_) {
       http.get(Uri.parse('$productionUrl/auth/me'), headers: AuthService.authHeaders).timeout(const Duration(seconds: 10)).then((_) {}, onError: (_) {});
     });
   }
@@ -45,7 +45,11 @@ class ApiService {
   }
 
   static Future<String> _fetchRaw(String url) async {
-    final res = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 60));
+    var res = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 60));
+    if (res.statusCode == 429) {
+      await Future.delayed(const Duration(seconds: 5));
+      res = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 60));
+    }
     if (res.statusCode == 200) return res.body;
     throw Exception('Request failed ($url): ${res.statusCode}');
   }
@@ -122,13 +126,21 @@ class ApiService {
   }
 
   static Future<void> saveAttendance(String date, List<Map<String, dynamic>> records) async {
-    final res = await http.post(
+    var res = await http.post(
       Uri.parse('$baseUrl/attendance'),
       headers: _headers,
       body: jsonEncode({'date': date, 'records': records}),
     ).timeout(const Duration(seconds: 60));
+    if (res.statusCode == 429) {
+      await Future.delayed(const Duration(seconds: 5));
+      res = await http.post(
+        Uri.parse('$baseUrl/attendance'),
+        headers: _headers,
+        body: jsonEncode({'date': date, 'records': records}),
+      ).timeout(const Duration(seconds: 60));
+    }
     if (res.statusCode != 200 && res.statusCode != 201) throw Exception('Failed to save attendance');
-    clearCache();
+    await clearCache();
   }
 
   static Future<MonthlyReport> getMonthlyReport(int year, int month) async {
@@ -162,13 +174,21 @@ class ApiService {
   }
 
   static Future<void> saveFees(List<Map<String, dynamic>> records) async {
-    final res = await http.post(
+    var res = await http.post(
       Uri.parse('$baseUrl/fees'),
       headers: _headers,
       body: jsonEncode({'records': records}),
     ).timeout(const Duration(seconds: 60));
+    if (res.statusCode == 429) {
+      await Future.delayed(const Duration(seconds: 5));
+      res = await http.post(
+        Uri.parse('$baseUrl/fees'),
+        headers: _headers,
+        body: jsonEncode({'records': records}),
+      ).timeout(const Duration(seconds: 60));
+    }
     if (res.statusCode != 200 && res.statusCode != 201) throw Exception('Failed to save fees');
-    clearCache();
+    await clearCache();
   }
 
   static Future<List<String>> getHolidays() async {
