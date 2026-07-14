@@ -36,12 +36,21 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
         ApiService.getHolidays(),
       ]);
       if (mounted) {
-        final att = results[0] as List<Map<String, dynamic>>;
-        final fees = results[1] as List;
-        final holidays = results[2] as List<String>;
+        final att = results[0] is List ? (results[0] as List).whereType<Map<String, dynamic>>().toList() : <Map<String, dynamic>>[];
+        final fees = results[1] is List ? results[1] as List : [];
+        final holidays = results[2] is List ? (results[2] as List).whereType<String>().toList() : <String>[];
         setState(() {
           _attendanceHistory = att;
-          for (final f in fees) { _feesMap[f.month] = f.status; _feeAmountMap[f.month] = f.amount; }
+          for (final f in fees) {
+            if (f is! Map) continue;
+            final month = f['month'];
+            final status = f['status'];
+            final amount = f['amount'];
+            if (month is int) {
+              if (status is String) _feesMap[month] = status;
+              if (amount is num) _feeAmountMap[month] = amount.toDouble();
+            }
+          }
           _holidays = holidays.toSet();
           _loading = false;
           _loadingFees = false;
@@ -180,7 +189,10 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
           Text('Attendance History', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: d ? Colors.white : AppTheme.textPrimary)),
           const Spacer(),
           if (!_loading)
-            Text('${_attendanceHistory.where((a) => (a['date'] as String).startsWith('$_calendarYear-${_calendarMonth.toString().padLeft(2, '0')}') && a['status'] == 'present').length} present',
+            Text('${_attendanceHistory.where((a) {
+              final dateStr = a['date']?.toString() ?? '';
+              return dateStr.startsWith('$_calendarYear-${_calendarMonth.toString().padLeft(2, '0')}') && a['status'] == 'present';
+            }).length} present',
                 style: TextStyle(fontSize: 12, color: AppTheme.success, fontWeight: FontWeight.w600)),
         ]),
         const SizedBox(height: 16),

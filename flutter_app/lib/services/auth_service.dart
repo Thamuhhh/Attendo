@@ -68,17 +68,17 @@ class AuthService {
       final data = jsonDecode(res.body) as Map<String, dynamic>;
       final parsed = _parseAuthResponse(data);
       await _saveTokens(
-        parsed['accessToken'] as String,
-        parsed['refreshToken'] as String,
-        parsed['instId'] as String,
-        parsed['name'] as String,
-        parsed['email'] as String,
+        parsed['accessToken'].toString(),
+        parsed['refreshToken'].toString(),
+        parsed['instId'].toString(),
+        parsed['name'].toString(),
+        parsed['email'].toString(),
       );
       PushNotificationService().sendTokenToServer().catchError((_) {});
       return true;
     }
     final err = jsonDecode(res.body);
-    throw Exception(err['error'] ?? 'Registration failed');
+    throw Exception(err is Map ? err['error'] ?? 'Registration failed' : 'Registration failed');
   }
 
   static Future<bool> login(String email, String password) async {
@@ -105,11 +105,11 @@ class AuthService {
       final data = jsonDecode(res.body) as Map<String, dynamic>;
       final parsed = _parseAuthResponse(data);
       await _saveTokens(
-        parsed['accessToken'] as String,
-        parsed['refreshToken'] as String,
-        parsed['instId'] as String,
-        parsed['name'] as String,
-        parsed['email'] as String,
+        parsed['accessToken'].toString(),
+        parsed['refreshToken'].toString(),
+        parsed['instId'].toString(),
+        parsed['name'].toString(),
+        parsed['email'].toString(),
       );
       PushNotificationService().sendTokenToServer().catchError((_) {});
       return true;

@@ -25,7 +25,12 @@ class DashboardPageState extends State<DashboardPage> {
     setState(() { _loading = true; _error = null; });
     try {
       final results = await Future.wait([ApiService.getTodayAttendance(), ApiService.getStudents()]);
-      if (mounted) setState(() { _today = results[0] as TodayAttendance; _totalStudents = (results[1] as List).length; _loading = false; });
+      if (mounted) {
+        _today = results[0] as TodayAttendance;
+        final studentList = results[1];
+        _totalStudents = studentList is List ? studentList.length : 0;
+        setState(() { _loading = false; });
+      }
     } catch (e) {
       if (mounted) setState(() { _loading = false; _error = AppStrings.get('failed_to_load'); });
     }

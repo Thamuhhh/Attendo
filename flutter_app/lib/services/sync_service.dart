@@ -53,7 +53,8 @@ class SyncService {
 
       for (int i = 0; i < pending.length; i++) {
         final row = pending[i];
-        final id = row['id'] as int;
+        final id = (row['id'] as int?) ?? 0;
+        if (id == 0) continue;
 
         final retries = _retryCount[id] ?? 0;
         if (retries >= _maxRetries) {
@@ -63,12 +64,14 @@ class SyncService {
 
         try {
           onSyncProgress?.call('Syncing ${i + 1} of ${pending.length}...');
-          final date = row['date'] as String;
-          final records = jsonDecode(row['records'] as String) as List;
+          final date = row['date']?.toString() ?? '';
+          final recordsRaw = row['records']?.toString() ?? '[]';
+          final records = jsonDecode(recordsRaw);
+          final recordList = records is List ? records : [];
           final res = await http.post(
             Uri.parse('${ApiService.baseUrl}/attendance'),
             headers: AuthService.authHeaders,
-            body: jsonEncode({'date': date, 'records': records}),
+            body: jsonEncode({'date': date, 'records': recordList}),
           ).timeout(const Duration(seconds: 60));
           if (res.statusCode == 200 || res.statusCode == 201) {
             await OfflineDb.markSynced(id);

@@ -34,7 +34,7 @@ class _RemindersPageState extends ConsumerState<RemindersPage> {
     await OfflineDb.updateReminder(updated);
     if (updated.enabled) {
       await NotificationService().scheduleReminder(updated);
-    } else {
+    } else if (p.id != null) {
       await NotificationService().cancelReminder(p.id!);
     }
     _load();
@@ -434,8 +434,10 @@ class _ReminderFormState extends State<_ReminderForm> {
                           borderRadius: BorderRadius.circular(14)),
                       ),
                       onPressed: () async {
-                        await OfflineDb.deleteReminder(widget.profile!.id!);
-                        await NotificationService().cancelReminder(widget.profile!.id!);
+                        final pid = widget.profile!.id;
+                        if (pid == null) return;
+                        await OfflineDb.deleteReminder(pid);
+                        await NotificationService().cancelReminder(pid);
                         widget.onSaved();
                         if (mounted) Navigator.pop(context);
                       },
