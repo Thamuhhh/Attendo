@@ -15,12 +15,8 @@ async function listStudents(req, { page, limit, skip, sort, search }) {
     };
   }
 
-  const [students, total] = await Promise.all([
-    Student.find(filter).sort(sort).skip(skip).limit(limit).lean(),
-    Student.countDocuments(filter),
-  ]);
-
-  return paginatedResponse(students, total, page, limit);
+  const students = await Student.find(filter).sort(sort).skip(skip).limit(limit).lean();
+  return students;
 }
 
 async function createStudent(req, { name, phone }) {
