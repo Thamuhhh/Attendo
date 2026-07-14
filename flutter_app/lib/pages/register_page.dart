@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme.dart';
 import '../l10n/strings.dart';
 import '../providers/auth_provider.dart';
+import '../main_shell.dart';
 import '../widgets/widgets.dart';
 import 'login_page.dart';
 
@@ -71,7 +72,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> with SingleTickerPr
         _nameCtrl.text.trim(), _emailCtrl.text.trim(),
         _phoneCtrl.text.trim(), _passCtrl.text,
       );
-      if (mounted) Navigator.popUntil(context, (route) => route.isFirst);
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const MainShell()),
+          (route) => false,
+        );
+      }
     } catch (e) {
       if (mounted) {
         AppTheme.showSnack(context, e.toString().replaceFirst('Exception: ', ''), isError: true);

@@ -53,8 +53,9 @@ async function register({ name, email, phone, password }) {
 
   return {
     accessToken,
+    token: accessToken,
     refreshToken,
-    institution: { id: String(inst._id || ''), name: String(inst.name || ''), email: String(inst.email || '') },
+    institution: { id: String(inst._id || ''), _id: String(inst._id || ''), name: String(inst.name || ''), email: String(inst.email || '') },
   };
 }
 
@@ -86,8 +87,9 @@ async function login({ email, password }) {
 
   return {
     accessToken,
+    token: accessToken,
     refreshToken,
-    institution: { id: String(inst._id || ''), name: String(inst.name || ''), email: String(inst.email || '') },
+    institution: { id: String(inst._id || ''), _id: String(inst._id || ''), name: String(inst.name || ''), email: String(inst.email || '') },
   };
 }
 
