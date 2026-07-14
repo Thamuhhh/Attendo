@@ -19,13 +19,12 @@ function errorHandler(err, req, res, _next) {
     return res.status(409).json({ error: 'Duplicate entry' });
   }
   if (err.name === 'ValidationError') {
-    return res.status(400).json({ error: err.message });
+    return res.status(400).json({ error: err.message || 'Validation failed' });
   }
 
   const status = err.statusCode || err.status || 500;
-  res.status(status).json({
-    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
-  });
+  const message = process.env.NODE_ENV === 'production' ? 'Internal server error' : (err.message || 'Unknown error');
+  res.status(status).json({ error: String(message) });
 }
 
 module.exports = { notFound, errorHandler };

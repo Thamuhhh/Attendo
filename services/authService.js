@@ -54,7 +54,7 @@ async function register({ name, email, phone, password }) {
   return {
     accessToken,
     refreshToken,
-    institution: { id: inst._id, name: inst.name, email: inst.email },
+    institution: { id: String(inst._id || ''), name: String(inst.name || ''), email: String(inst.email || '') },
   };
 }
 
@@ -87,7 +87,7 @@ async function login({ email, password }) {
   return {
     accessToken,
     refreshToken,
-    institution: { id: inst._id, name: inst.name, email: inst.email },
+    institution: { id: String(inst._id || ''), name: String(inst.name || ''), email: String(inst.email || '') },
   };
 }
 
@@ -176,7 +176,13 @@ async function getProfile(instId) {
     err.statusCode = 404;
     throw err;
   }
-  return inst;
+  return {
+    _id: String(inst._id || ''),
+    name: String(inst.name || ''),
+    email: String(inst.email || ''),
+    phone: String(inst.phone || ''),
+    createdAt: inst.createdAt,
+  };
 }
 
 async function updateFcmToken(instId, fcmToken) {
