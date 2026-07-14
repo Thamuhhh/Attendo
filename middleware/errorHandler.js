@@ -23,7 +23,10 @@ function errorHandler(err, req, res, _next) {
   }
 
   const status = err.statusCode || err.status || 500;
-  const message = process.env.NODE_ENV === 'production' ? 'Internal server error' : (err.message || 'Unknown error');
+  const isClientError = status >= 400 && status < 500;
+  const message = isClientError
+    ? (err.message || 'Request failed')
+    : (process.env.NODE_ENV === 'production' ? 'Internal server error' : (err.message || 'Unknown error'));
   res.status(status).json({ error: String(message) });
 }
 
