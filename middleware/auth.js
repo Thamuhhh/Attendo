@@ -2,6 +2,14 @@ const jwt = require('jsonwebtoken');
 const Institution = require('../models/Institution');
 const config = require('../config');
 
+function refreshAccessToken(decoded) {
+  return jwt.sign(
+    { id: decoded.id, email: decoded.email },
+    config.jwt.secret,
+    { expiresIn: config.jwt.expiresIn }
+  );
+}
+
 async function authMiddleware(req, res, next) {
   try {
     const header = req.headers.authorization;
@@ -26,6 +34,15 @@ async function authMiddleware(req, res, next) {
     }
 
     req.institution = inst;
+
+    const now = Math.floor(Date.now() / 1000);
+    const lifetime = decoded.exp - decoded.iat;
+    const age = now - decoded.iat;
+    if (lifetime > 0 && age > lifetime * 0.5) {
+      const newToken = refreshAccessToken(decoded);
+      res.setHeader('X-Refreshed-Token', newToken);
+    }
+
     next();
   } catch (err) {
     next(err);

@@ -198,6 +198,15 @@ class AuthService {
     return {'Content-Type': 'application/json'};
   }
 
+  static Future<void> _updateTokenFromHeader(http.Response response) async {
+    final newToken = response.headers['x-refreshed-token'];
+    if (newToken != null && newToken.isNotEmpty && newToken != _token) {
+      _token = newToken;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_tokenKey, _token!);
+    }
+  }
+
   static Future<http.Response> authenticatedRequest(
       Future<http.Response> Function() request) async {
     var response = await request();
@@ -212,6 +221,7 @@ class AuthService {
       await Future.delayed(const Duration(seconds: 5));
       response = await request();
     }
+    await _updateTokenFromHeader(response);
     return response;
   }
 }
