@@ -18,8 +18,10 @@ const attendanceRoutes = require('./routes/attendance');
 const feeRoutes = require('./routes/fees');
 const holidayRoutes = require('./routes/holidays');
 const reportRoutes = require('./routes/reports');
+const migrateRoutes = require('./routes/migrate');
 
 const app = express();
+app.set('trust proxy', 1);
 
 app.use(helmet());
 app.use(cors({ origin: true, credentials: true }));
@@ -92,6 +94,7 @@ app.use('/api/v1/attendance', attendanceRoutes);
 app.use('/api/v1/fees', feeRoutes);
 app.use('/api/v1/holidays', holidayRoutes);
 app.use('/api/v1/reports', reportRoutes);
+app.use('/api/v1/migrate', migrateRoutes);
 
 app.use('/api/auth', (req, res, next) => {
   if (req.path === '/login' || req.path === '/register') return loginLimiter(req, res, next);
@@ -102,6 +105,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/fees', feeRoutes);
 app.use('/api/holidays', holidayRoutes);
 app.use('/api/report', reportRoutes);
+app.use('/api/migrate', migrateRoutes);
 
 app.get('/api', (req, res) => {
   res.json({ message: 'Attendo API is running', version: '2.0.0' });

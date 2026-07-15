@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "com.attendo_app"
+    namespace = "com.tuition.attendance_app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -19,7 +19,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.attendo_app"
+        applicationId = "com.tuition.attendance_app"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         multiDexEnabled = true
