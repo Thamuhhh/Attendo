@@ -23,17 +23,20 @@ class DashboardPageState extends State<DashboardPage> {
 
   Future<void> load() async {
     setState(() { _loading = true; _error = null; });
+    TodayAttendance? today;
+    int totalStudents = 0;
     try {
-      final results = await Future.wait([ApiService.getTodayAttendance(), ApiService.getStudents()]);
-      if (mounted) {
-        _today = results[0] as TodayAttendance;
-        final studentList = results[1];
-        _totalStudents = studentList is List ? studentList.length : 0;
-        setState(() { _loading = false; });
-      }
-    } catch (e) {
-      if (mounted) setState(() { _loading = false; _error = AppStrings.get('failed_to_load'); });
+      today = await ApiService.getTodayAttendance();
+    } catch (_) {}
+    try {
+      final studentList = await ApiService.getStudents();
+      totalStudents = studentList.length;
+    } catch (_) {}
+    if (today == null && totalStudents == 0 && mounted) {
+      setState(() { _loading = false; _error = AppStrings.get('failed_to_load'); });
+      return;
     }
+    if (mounted) setState(() { _today = today; _totalStudents = totalStudents; _loading = false; });
   }
 
   String get _greeting {

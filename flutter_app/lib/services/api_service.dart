@@ -45,13 +45,23 @@ class ApiService {
   }
 
   static Future<String> _fetchRaw(String url) async {
-    var res = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 60));
-    if (res.statusCode == 429) {
-      await Future.delayed(const Duration(seconds: 5));
-      res = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 60));
+    http.Response? res;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        res = await AuthService.authenticatedRequest(() async {
+          return await http.get(Uri.parse(url), headers: AuthService.authHeaders).timeout(const Duration(seconds: 90));
+        });
+        if (res.statusCode == 429) {
+          await Future.delayed(const Duration(seconds: 5));
+          continue;
+        }
+        break;
+      } catch (_) {
+        if (attempt < 2) await Future.delayed(Duration(seconds: 3 * (attempt + 1)));
+      }
     }
-    if (res.statusCode == 200) return res.body;
-    throw Exception('Request failed ($url): ${res.statusCode}');
+    if (res != null && res.statusCode == 200) return res.body;
+    throw Exception('Request failed ($url): ${res?.statusCode ?? 'timeout'}');
   }
 
   static Future<String> _fetchRawWithFallback(String cacheKey, String url) async {
@@ -88,28 +98,34 @@ class ApiService {
   }
 
   static Future<Student> addStudent(String name, String phone) async {
-    final res = await http.post(
-      Uri.parse('$baseUrl/students'),
-      headers: _headers,
-      body: jsonEncode({'name': name, 'phone': phone}),
-    ).timeout(const Duration(seconds: 60));
+    final res = await AuthService.authenticatedRequest(() async {
+      return await http.post(
+        Uri.parse('$baseUrl/students'),
+        headers: AuthService.authHeaders,
+        body: jsonEncode({'name': name, 'phone': phone}),
+      ).timeout(const Duration(seconds: 60));
+    });
     if (res.statusCode == 200) return Student.fromJson(jsonDecode(res.body));
     final err = jsonDecode(res.body);
     throw Exception(err['error'] ?? 'Failed to add student');
   }
 
   static Future<Student> updateStudent(String id, String name, String phone) async {
-    final res = await http.put(
-      Uri.parse('$baseUrl/students/$id'),
-      headers: _headers,
-      body: jsonEncode({'name': name, 'phone': phone}),
-    ).timeout(const Duration(seconds: 60));
+    final res = await AuthService.authenticatedRequest(() async {
+      return await http.put(
+        Uri.parse('$baseUrl/students/$id'),
+        headers: AuthService.authHeaders,
+        body: jsonEncode({'name': name, 'phone': phone}),
+      ).timeout(const Duration(seconds: 60));
+    });
     if (res.statusCode == 200) return Student.fromJson(jsonDecode(res.body));
     throw Exception('Failed to update student');
   }
 
   static Future<void> deleteStudent(String id) async {
-    final res = await http.delete(Uri.parse('$baseUrl/students/$id'), headers: _headers).timeout(const Duration(seconds: 60));
+    final res = await AuthService.authenticatedRequest(() async {
+      return await http.delete(Uri.parse('$baseUrl/students/$id'), headers: AuthService.authHeaders).timeout(const Duration(seconds: 60));
+    });
     if (res.statusCode != 200) throw Exception('Failed to delete student');
   }
 
@@ -130,21 +146,29 @@ class ApiService {
   }
 
   static Future<void> saveAttendance(String date, List<Map<String, dynamic>> records) async {
-    var res = await http.post(
-      Uri.parse('$baseUrl/attendance'),
-      headers: _headers,
-      body: jsonEncode({'date': date, 'records': records}),
-    ).timeout(const Duration(seconds: 60));
-    if (res.statusCode == 429) {
-      await Future.delayed(const Duration(seconds: 5));
-      res = await http.post(
-        Uri.parse('$baseUrl/attendance'),
-        headers: _headers,
-        body: jsonEncode({'date': date, 'records': records}),
-      ).timeout(const Duration(seconds: 60));
+    http.Response? res;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        res = await AuthService.authenticatedRequest(() async {
+          return await http.post(
+            Uri.parse('$baseUrl/attendance'),
+            headers: AuthService.authHeaders,
+            body: jsonEncode({'date': date, 'records': records}),
+          ).timeout(const Duration(seconds: 90));
+        });
+        if (res.statusCode == 429) {
+          await Future.delayed(const Duration(seconds: 5));
+          continue;
+        }
+        break;
+      } catch (_) {
+        if (attempt < 2) await Future.delayed(Duration(seconds: 3 * (attempt + 1)));
+      }
     }
-    if (res.statusCode != 200 && res.statusCode != 201) throw Exception('Failed to save attendance');
-    await clearCache();
+    if (res == null || (res.statusCode != 200 && res.statusCode != 201)) throw Exception('Failed to save attendance');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('offline_attendance_$date');
+    await CacheService.clear();
   }
 
   static Future<MonthlyReport> getMonthlyReport(int year, int month) async {
@@ -185,20 +209,26 @@ class ApiService {
   }
 
   static Future<void> saveFees(List<Map<String, dynamic>> records) async {
-    var res = await http.post(
-      Uri.parse('$baseUrl/fees'),
-      headers: _headers,
-      body: jsonEncode({'records': records}),
-    ).timeout(const Duration(seconds: 60));
-    if (res.statusCode == 429) {
-      await Future.delayed(const Duration(seconds: 5));
-      res = await http.post(
-        Uri.parse('$baseUrl/fees'),
-        headers: _headers,
-        body: jsonEncode({'records': records}),
-      ).timeout(const Duration(seconds: 60));
+    http.Response? res;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        res = await AuthService.authenticatedRequest(() async {
+          return await http.post(
+            Uri.parse('$baseUrl/fees'),
+            headers: AuthService.authHeaders,
+            body: jsonEncode({'records': records}),
+          ).timeout(const Duration(seconds: 60));
+        });
+        if (res.statusCode == 429) {
+          await Future.delayed(const Duration(seconds: 5));
+          continue;
+        }
+        break;
+      } catch (_) {
+        if (attempt < 2) await Future.delayed(Duration(seconds: 3 * (attempt + 1)));
+      }
     }
-    if (res.statusCode != 200 && res.statusCode != 201) throw Exception('Failed to save fees');
+    if (res == null || (res.statusCode != 200 && res.statusCode != 201)) throw Exception('Failed to save fees');
     await clearCache();
   }
 
@@ -210,31 +240,38 @@ class ApiService {
   }
 
   static Future<void> addHoliday(String date) async {
-    final res = await http.post(
-      Uri.parse('$baseUrl/holidays'),
-      headers: _headers,
-      body: jsonEncode({'date': date}),
-    ).timeout(const Duration(seconds: 60));
+    final res = await AuthService.authenticatedRequest(() async {
+      return await http.post(
+        Uri.parse('$baseUrl/holidays'),
+        headers: AuthService.authHeaders,
+        body: jsonEncode({'date': date}),
+      ).timeout(const Duration(seconds: 60));
+    });
     if (res.statusCode != 200) throw Exception('Failed to add holiday');
     clearCache();
   }
 
   static Future<void> removeHoliday(String date) async {
-    final res = await http.delete(Uri.parse('$baseUrl/holidays/$date'), headers: _headers).timeout(const Duration(seconds: 60));
+    final res = await AuthService.authenticatedRequest(() async {
+      return await http.delete(Uri.parse('$baseUrl/holidays/$date'), headers: AuthService.authHeaders).timeout(const Duration(seconds: 60));
+    });
     if (res.statusCode != 200) throw Exception('Failed to remove holiday');
     clearCache();
   }
 
   static Future<Map<String, dynamic>> claimOldData() async {
-    final res = await http.post(
-      Uri.parse('$baseUrl/migrate/claim'),
-      headers: _headers,
-    ).timeout(const Duration(seconds: 60));
+    final res = await AuthService.authenticatedRequest(() async {
+      return await http.post(
+        Uri.parse('$baseUrl/migrate/claim'),
+        headers: AuthService.authHeaders,
+      ).timeout(const Duration(seconds: 60));
+    });
     if (res.statusCode == 200) return jsonDecode(res.body);
     throw Exception('Claim failed');
   }
 
   static Future<List<Map<String, dynamic>>> getAttendanceHistory(String studentId, {int? year, int? month}) async {
+    if (studentId.isEmpty) return [];
     String url = '$baseUrl/attendance/history/$studentId';
     if (year != null && month != null) url += '?year=$year&month=$month';
     final body = await _fetchRawWithFallback('att_history_$studentId', url);

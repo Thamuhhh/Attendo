@@ -53,30 +53,32 @@ class _AttendancePageState extends State<AttendancePage> {
 
   Future<void> _load() async {
     setState(() { _loading = true; _error = null; });
+    List<Student> students = [];
+    List<String> holidays = [];
     try {
-      final results = await Future.wait([
-        ApiService.getStudents(),
-        ApiService.getHolidays(),
-      ]);
-      final students = results[0] as List<Student>;
-      final holidays = results[1] as List<String>;
-      List<AttendanceRecord> existing = [];
-      try { existing = await ApiService.getAttendanceByDate(_dateStr()); } catch (_) {}
-      final sm = <String, String>{};
-      for (final s in students) {
-        final f = existing.where((a) => a.studentId == s.id);
-        sm[s.id] = f.isNotEmpty ? f.first.status : 'absent';
-      }
-      if (mounted) setState(() {
-        _allStudents = students;
-        _filteredStudents = students;
-        _statusMap = sm;
-        _holidays = holidays.toSet();
-        _loading = false;
-      });
-    } catch (e) {
-      if (mounted) setState(() { _loading = false; _error = AppStrings.get('failed_to_load_attendance'); });
+      students = await ApiService.getStudents();
+    } catch (_) {}
+    try {
+      holidays = await ApiService.getHolidays();
+    } catch (_) {}
+    if (students.isEmpty && mounted) {
+      setState(() { _loading = false; _error = AppStrings.get('failed_to_load_attendance'); });
+      return;
     }
+    List<AttendanceRecord> existing = [];
+    try { existing = await ApiService.getAttendanceByDate(_dateStr()); } catch (_) {}
+    final sm = <String, String>{};
+    for (final s in students) {
+      final f = existing.where((a) => a.studentId == s.id);
+      sm[s.id] = f.isNotEmpty ? f.first.status : 'absent';
+    }
+    if (mounted) setState(() {
+      _allStudents = students;
+      _filteredStudents = students;
+      _statusMap = sm;
+      _holidays = holidays.toSet();
+      _loading = false;
+    });
   }
 
   String _dateStr() => '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}';

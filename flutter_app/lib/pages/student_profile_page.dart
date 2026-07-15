@@ -29,34 +29,34 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
 
   Future<void> _load() async {
     setState(() { _loading = true; _error = null; });
-    try {
-      final results = await Future.wait([
-        ApiService.getAttendanceHistory(widget.student.id),
-        ApiService.getFeeRecords(widget.student.id, DateTime.now().year),
-        ApiService.getHolidays(),
-      ]);
-      if (mounted) {
-        final att = results[0] is List ? (results[0] as List).whereType<Map<String, dynamic>>().toList() : <Map<String, dynamic>>[];
-        final fees = results[1] is List ? results[1] as List : [];
-        final holidays = results[2] is List ? (results[2] as List).whereType<String>().toList() : <String>[];
-        setState(() {
-          _attendanceHistory = att;
-          for (final f in fees) {
-            if (f is! Map) continue;
-            final month = f['month'];
-            final status = f['status'];
-            final amount = f['amount'];
-            if (month is int) {
-              if (status is String) _feesMap[month] = status;
-              if (amount is num) _feeAmountMap[month] = amount.toDouble();
-            }
-          }
-          _holidays = holidays.toSet();
-          _loading = false;
-          _loadingFees = false;
-        });
+    List<Map<String, dynamic>> att = [];
+    List fees = [];
+    List<String> holidays = [];
+    try { att = await ApiService.getAttendanceHistory(widget.student.id); } catch (_) {}
+    try { fees = await ApiService.getFeeRecords(widget.student.id, DateTime.now().year); } catch (_) {}
+    try { holidays = await ApiService.getHolidays(); } catch (_) {}
+    if (mounted) {
+      final fMap = <int, String>{};
+      final faMap = <int, double>{};
+      for (final f in fees) {
+        if (f is! Map) continue;
+        final month = f['month'];
+        final status = f['status'];
+        final amount = f['amount'];
+        if (month is int) {
+          if (status is String) fMap[month] = status;
+          if (amount is num) faMap[month] = amount.toDouble();
+        }
       }
-    } catch (_) { if (mounted) setState(() { _loading = false; _loadingFees = false; _error = 'Failed to load profile'; }); }
+      setState(() {
+        _attendanceHistory = att;
+        _feesMap.addAll(fMap);
+        _feeAmountMap.addAll(faMap);
+        _holidays = holidays.toSet();
+        _loading = false;
+        _loadingFees = false;
+      });
+    }
   }
 
   String? _getStatus(String dateStr) {
